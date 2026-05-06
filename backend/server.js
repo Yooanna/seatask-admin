@@ -6,14 +6,17 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 
-// ========== CREATE APP (THIS WAS MISSING!) ==========
 const app = express();
 
 // ========== MIDDLEWARE ==========
 app.use(express.json());
 app.use(cors());
 
-// Serve static files from the 'frontend' folder
+// ========== STATIC FILES - FIXED PATH ==========
+// Serve static files from the 'frontend' directory
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+// Also serve static files from the root 'frontend' directory (if exists)
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // ========== MODELS ==========
@@ -182,6 +185,17 @@ async function initDefaultData() {
         console.log('✅ Default categories added');
     }
 }
+
+// ========== ROUTE FOR ADMIN.HTML ==========
+// Explicitly serve admin.html when someone visits /admin.html
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'admin.html'));
+});
+
+// Redirect root to admin.html
+app.get('/', (req, res) => {
+    res.redirect('/admin.html');
+});
 
 initDefaultData();
 
