@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SeaTask Admin Panel</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🌊 SeaTask Admin</h1>
+            <p>Login to manage products & categories</p>
+            <input type="text" id="loginUsername" placeholder="Username" class="login-input">
+            <input type="password" id="loginPassword" placeholder="Password" class="login-input">
+            <button id="loginBtn" class="login-btn">Login</button>
+            <div id="loginError" class="login-error"></div>
+        </div>
+    </div>
+    <div id="adminDashboard" style="display:none;">
+        <div class="sidebar">
+            <div class="sidebar-logo"><h2>🌊 SeaTask</h2><p>Admin Panel</p></div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-tab="products">📦 Products</button>
+                <button class="nav-btn" data-tab="categories">🏷️ Categories</button>
+            </nav>
+            <button id="logoutBtn" class="logout-btn">🚪 Logout</button>
+        </div>
+        <div class="main-content">
+            <header class="admin-header">
+                <h1 id="pageTitle">Products Management</h1>
+                <button id="addNewBtn" class="add-btn">+ Add New</button>
+            </header>
+            <div id="productsTab" class="tab-content">
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead>
+                        <tbody id="productsList"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="categoriesTab" class="tab-content" style="display:none;">
+                <div class="categories-grid" id="categoriesList"></div>
+            </div>
+        </div>
+    </div>
+    <script src="admin.js"></script>
+</body>
+</html>
