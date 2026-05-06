@@ -13,10 +13,8 @@ app.use(express.json());
 app.use(cors());
 
 // ========== STATIC FILES - FIXED PATH ==========
-// Serve static files from the 'frontend' directory
+// Serve static files - try both locations
 app.use(express.static(path.join(__dirname, 'frontend')));
-
-// Also serve static files from the root 'frontend' directory (if exists)
 app.use(express.static(path.join(__dirname, '../frontend')));
 
 // ========== MODELS ==========
