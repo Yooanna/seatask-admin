@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: seatask-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node api-server.js
+    envVars:
+      - key: DB_HOST
+        fromDatabase:
+          name: seatask-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: seatask-db
+          property: port
+      - key: DB_USER
+        fromDatabase:
+          name: seatask-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: seatask-db
+          property: password
+      - key: DB_NAME
+        fromDatabase:
+          name: seatask-db
+          property: database
+      - key: API_PORT
+        value: 3002
+
+databases:
+  - name: seatask-db
+    plan: free
+    databaseName: seatask_db
+    user: seatask_user
