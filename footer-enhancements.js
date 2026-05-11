@@ -4,7 +4,7 @@
 
 (function() {
     // API endpoint for newsletter (change to your server URL)
-    const API_URL = 'http://localhost:3002'; // Your API server address
+    const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
     
     // Check if enhanced footer already exists
     function isFooterEnhanced() {
