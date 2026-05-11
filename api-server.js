@@ -24,7 +24,7 @@ const pool = new Pool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    ssl: { rejectUnauthorized: false }, // Required for Render PostgreSQL
+    ssl: { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 10000,
@@ -57,7 +57,6 @@ app.get('/', (req, res) => {
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
-    // Test database connection
     let dbStatus = 'unknown';
     try {
         await pool.query('SELECT NOW()');
@@ -95,11 +94,11 @@ app.post('/api/subscribe', async (req, res) => {
             return res.status(200).json({ success: false, message: 'This email is already subscribed!' });
         }
         
-        // Insert new subscriber
+        // Insert new subscriber (without 'source' column)
         await pool.query(
-            `INSERT INTO newsletter_subscribers (email, status, subscribed_at) 
-             VALUES ($1, 'active', NOW())`,
-            [email.toLowerCase()]
+            `INSERT INTO newsletter_subscribers (email, status, subscribed_at, user_id) 
+             VALUES ($1, 'active', NOW(), $2)`,
+            [email.toLowerCase(), '']
         );
         
         console.log(`📧 New subscriber saved: ${email}`);
