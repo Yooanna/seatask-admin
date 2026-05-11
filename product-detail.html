@@ -1,635 +1,855 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SeaTask | Product Details</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Mobile Responsive for Product Detail Page */
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeaTask | Product Details</title>
+<link rel="stylesheet" href="style.css">
+<script src="product-angles.js"></script>
+<script src="universal-chatbot.js"></script>
+<style>
+.product-detail-page {
+max-width: 1200px;
+margin: 30px auto;
+padding: 0 20px;
+}
+.product-detail-main {
+display: flex;
+gap: 40px;
+flex-wrap: wrap;
+background: white;
+border-radius: 20px;
+padding: 30px;
+box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+.product-detail-gallery {
+flex: 1;
+min-width: 300px;
+position: relative;
+}
+.product-detail-gallery img {
+width: 100%;
+border-radius: 16px;
+background: #f5f8fa;
+padding: 20px;
+}
+.product-detail-info {
+flex: 1.5;
+min-width: 300px;
+}
+.product-detail-title {
+font-size: 24px;
+font-weight: 600;
+color: #1a3a5c;
+margin-bottom: 8px;
+}
+.product-detail-brand {
+color: #7a8e9c;
+font-size: 14px;
+margin-bottom: 10px;
+}
+.product-detail-rating {
+display: flex;
+align-items: center;
+gap: 10px;
+margin-bottom: 15px;
+}
+.rating-stars {
+color: #f5b042;
+font-size: 16px;
+}
+.rating-count {
+color: #7a8e9c;
+font-size: 14px;
+}
+.product-detail-price {
+background: #eef5fa;
+padding: 15px;
+border-radius: 12px;
+margin: 15px 0;
+}
+.current-price {
+font-size: 32px;
+font-weight: bold;
+color: #1976a5;
+}
+.original-price {
+font-size: 18px;
+color: #999;
+text-decoration: line-through;
+margin-left: 10px;
+}
+.discount {
+background: #ff6b6b;
+color: white;
+padding: 4px 8px;
+border-radius: 20px;
+font-size: 12px;
+margin-left: 10px;
+}
+.product-variations {
+margin: 20px 0;
+}
+.variation-label {
+font-weight: 600;
+margin-bottom: 8px;
+color: #1a3a5c;
+}
+.variation-options {
+display: flex;
+gap: 10px;
+flex-wrap: wrap;
+}
+.variation-btn {
+background: white;
+border: 1px solid #c8dce8;
+padding: 8px 16px;
+border-radius: 30px;
+cursor: pointer;
+transition: 0.2s;
+}
+.variation-btn:hover, .variation-btn.active {
+background: #1976a5;
+color: white;
+border-color: #1976a5;
+}
+.quantity-selector {
+display: flex;
+align-items: center;
+gap: 15px;
+margin: 20px 0;
+}
+.quantity-btn {
+background: #e0eef5;
+border: none;
+width: 36px;
+height: 36px;
+border-radius: 50%;
+font-size: 20px;
+cursor: pointer;
+}
+.quantity-value {
+font-size: 18px;
+font-weight: 600;
+min-width: 40px;
+text-align: center;
+}
+.add-to-cart-detail {
+background: #1976a5;
+color: white;
+border: none;
+padding: 14px 28px;
+border-radius: 40px;
+font-size: 16px;
+font-weight: 600;
+cursor: pointer;
+width: 100%;
+margin: 10px 0;
+}
+.add-to-cart-detail:hover {
+background: #0f5479;
+}
+.seller-info {
+background: #f5f8fa;
+padding: 15px;
+border-radius: 12px;
+margin: 20px 0;
+}
+.seller-name {
+font-weight: 600;
+color: #1976a5;
+}
+.delivery-info {
+margin: 20px 0;
+padding: 15px;
+border: 1px solid #e0eef5;
+border-radius: 12px;
+}
+.delivery-row {
+display: flex;
+justify-content: space-between;
+margin-bottom: 10px;
+}
+.warranty-info {
+background: #e8f4fd;
+padding: 12px;
+border-radius: 12px;
+margin: 15px 0;
+}
+.reviews-section {
+margin-top: 40px;
+background: white;
+border-radius: 20px;
+padding: 30px;
+}
+.review-card {
+border-bottom: 1px solid #e0eef5;
+padding: 15px 0;
+}
+.reviewer-name {
+font-weight: 600;
+}
+.review-rating {
+color: #f5b042;
+font-size: 13px;
+}
+.review-date {
+color: #999;
+font-size: 12px;
+}
+.review-text {
+margin-top: 8px;
+color: #4a627a;
+}
+.back-button {
+display: inline-block;
+margin-bottom: 20px;
+color: #1976a5;
+text-decoration: none;
+}
+.back-button:hover {
+text-decoration: underline;
+}
+.recommendations-section {
+margin-top: 40px;
+background: white;
+border-radius: 20px;
+padding: 30px;
+}
+.recommendations-title {
+font-size: 20px;
+font-weight: 600;
+color: #0a4b6e;
+margin-bottom: 20px;
+border-left: 5px solid #1976a5;
+padding-left: 15px;
+}
+.recommendations-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+gap: 20px;
+}
+.rec-product-card {
+background: #f5f8fa;
+border-radius: 12px;
+overflow: hidden;
+cursor: pointer;
+transition: transform 0.2s, box-shadow 0.2s;
+text-decoration: none;
+color: inherit;
+display: block;
+}
+.rec-product-card:hover {
+transform: translateY(-3px);
+box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+.rec-product-img {
+width: 100%;
+height: 150px;
+object-fit: contain;
+background: white;
+padding: 15px;
+}
+.rec-product-info {
+padding: 12px;
+}
+.rec-product-name {
+font-size: 14px;
+font-weight: 600;
+margin-bottom: 5px;
+}
+.rec-product-price {
+color: #1976a5;
+font-weight: bold;
+font-size: 16px;
+}
+.rec-product-rating {
+color: #f5b042;
+font-size: 12px;
+margin-top: 5px;
+}
+.modal {
+display: none;
+position: fixed;
+z-index: 1000;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background: rgba(0,0,0,0.5);
+justify-content: center;
+align-items: center;
+}
+.modal-content {
+background: white;
+padding: 25px;
+border-radius: 20px;
+width: 90%;
+max-width: 500px;
+max-height: 80vh;
+overflow-y: auto;
+position: relative;
+}
+.close, .close-checkout {
+position: absolute;
+right: 20px;
+top: 15px;
+font-size: 28px;
+cursor: pointer;
+}
+.cart-summary {
+margin-top: 20px;
+padding-top: 15px;
+border-top: 2px solid #e0eef5;
+}
+.cart-total {
+text-align: right;
+font-size: 18px;
+margin-bottom: 15px;
+}
+.cart-actions {
+display: flex;
+gap: 12px;
+}
+.btn-primary, .btn-secondary, .btn-submit {
+flex: 1;
+padding: 12px;
+border: none;
+border-radius: 30px;
+cursor: pointer;
+font-weight: 600;
+}
+.btn-primary {
+background: #1976a5;
+color: white;
+}
+.btn-secondary {
+background: #e0eef5;
+color: #1a3a5c;
+}
+.btn-submit {
+background: #1976a5;
+color: white;
+width: 100%;
+}
+.form-group {
+margin-bottom: 15px;
+}
+.form-group input, .form-group select {
+width: 100%;
+padding: 12px;
+border: 1px solid #c8dce8;
+border-radius: 12px;
+font-size: 14px;
+}
+.toast {
+position: fixed;
+bottom: 30px;
+left: 50%;
+transform: translateX(-50%);
+background: #1976a5;
+color: white;
+padding: 12px 24px;
+border-radius: 40px;
+font-size: 14px;
+z-index: 1100;
+opacity: 0;
+visibility: hidden;
+transition: 0.3s;
+}
+footer {
+background: #d4e6f1;
+margin-top: 50px;
+padding: 40px 20px 20px;
+}
+.footer-content {
+max-width: 1200px;
+margin: 0 auto;
+text-align: center;
+}
+.footer-section h4 {
+margin-bottom: 10px;
+color: #0a4b6e;
+font-size: 18px;
+}
+.footer-section p {
+color: #1a3a5c;
+font-size: 14px;
+}
+.copyright {
+text-align: center;
+margin-top: 25px;
+padding-top: 15px;
+border-top: 1px solid #b8cbd8;
+font-size: 12px;
+color: #4a627a;
+}
 @media (max-width: 768px) {
-    .product-detail-main {
-        flex-direction: column;
-        padding: 20px;
-        gap: 20px;
-    }
-    
-    .product-detail-title {
-        font-size: 20px;
-    }
-    
-    .current-price {
-        font-size: 24px;
-    }
-    
-    .original-price {
-        font-size: 14px;
-    }
-    
-    .recommendations-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-    
-    .rec-product-name {
-        font-size: 12px;
-    }
-    
-    .rec-product-price {
-        font-size: 14px;
-    }
+.product-detail-main {
+flex-direction: column;
+padding: 20px;
 }
-
-@media (max-width: 480px) {
-    .product-detail-main {
-        padding: 15px;
-    }
-    
-    .product-detail-title {
-        font-size: 18px;
-    }
-    
-    .current-price {
-        font-size: 20px;
-    }
-    
-    .variation-btn {
-        padding: 6px 12px;
-        font-size: 12px;
-    }
-    
-    .recommendations-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .delivery-row {
-        flex-direction: column;
-        gap: 5px;
-    }
+.recommendations-grid {
+grid-template-columns: repeat(2, 1fr);
 }
-        /* Additional styles for product detail page */
-        .product-detail-page {
-            max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
-        }
-        .product-detail-main {
-            display: flex;
-            gap: 40px;
-            flex-wrap: wrap;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        }
-        .product-detail-gallery {
-            flex: 1;
-            min-width: 300px;
-        }
-        .product-detail-gallery img {
-            width: 100%;
-            border-radius: 16px;
-            background: #f5f8fa;
-            padding: 20px;
-        }
-        .product-detail-info {
-            flex: 1.5;
-            min-width: 300px;
-        }
-        .product-detail-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a3a5c;
-            margin-bottom: 8px;
-        }
-        .product-detail-brand {
-            color: #7a8e9c;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        .product-detail-rating {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .rating-stars {
-            color: #f5b042;
-            font-size: 16px;
-        }
-        .rating-count {
-            color: #7a8e9c;
-            font-size: 14px;
-        }
-        .product-detail-price {
-            background: #eef5fa;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 15px 0;
-        }
-        .current-price {
-            font-size: 32px;
-            font-weight: bold;
-            color: #1976a5;
-        }
-        .original-price {
-            font-size: 18px;
-            color: #999;
-            text-decoration: line-through;
-            margin-left: 10px;
-        }
-        .discount {
-            background: #ff6b6b;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        .product-variations {
-            margin: 20px 0;
-        }
-        .variation-label {
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #1a3a5c;
-        }
-        .variation-options {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .variation-btn {
-            background: white;
-            border: 1px solid #c8dce8;
-            padding: 8px 16px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        .variation-btn:hover, .variation-btn.active {
-            background: #1976a5;
-            color: white;
-            border-color: #1976a5;
-        }
-        .quantity-selector {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 20px 0;
-        }
-        .quantity-btn {
-            background: #e0eef5;
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            font-size: 20px;
-            cursor: pointer;
-        }
-        .quantity-value {
-            font-size: 18px;
-            font-weight: 600;
-            min-width: 40px;
-            text-align: center;
-        }
-        .add-to-cart-detail {
-            background: #1976a5;
-            color: white;
-            border: none;
-            padding: 14px 28px;
-            border-radius: 40px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin: 10px 0;
-        }
-        .add-to-cart-detail:hover {
-            background: #0f5479;
-        }
-        .seller-info {
-            background: #f5f8fa;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 20px 0;
-        }
-        .seller-name {
-            font-weight: 600;
-            color: #1976a5;
-        }
-        .delivery-info {
-            margin: 20px 0;
-            padding: 15px;
-            border: 1px solid #e0eef5;
-            border-radius: 12px;
-        }
-        .delivery-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .warranty-info {
-            background: #e8f4fd;
-            padding: 12px;
-            border-radius: 12px;
-            margin: 15px 0;
-        }
-        .reviews-section {
-            margin-top: 40px;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-        }
-        .review-card {
-            border-bottom: 1px solid #e0eef5;
-            padding: 15px 0;
-        }
-        .reviewer-name {
-            font-weight: 600;
-        }
-        .review-rating {
-            color: #f5b042;
-            font-size: 13px;
-        }
-        .review-date {
-            color: #999;
-            font-size: 12px;
-        }
-        .review-text {
-            margin-top: 8px;
-            color: #4a627a;
-        }
-        .back-button {
-            display: inline-block;
-            margin-bottom: 20px;
-            color: #1976a5;
-            text-decoration: none;
-        }
-        .back-button:hover {
-            text-decoration: underline;
-        }
-        
-        /* ========== RECOMMENDATIONS SECTION ========== */
-        .recommendations-section {
-            margin-top: 40px;
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-        }
-        .recommendations-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #0a4b6e;
-            margin-bottom: 20px;
-            border-left: 5px solid #1976a5;
-            padding-left: 15px;
-        }
-        .recommendations-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        .rec-product-card {
-            background: #f5f8fa;
-            border-radius: 12px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            color: inherit;
-            display: block;
-        }
-        .rec-product-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .rec-product-img {
-            width: 100%;
-            height: 150px;
-            object-fit: contain;
-            background: white;
-            padding: 15px;
-        }
-        .rec-product-info {
-            padding: 12px;
-        }
-        .rec-product-name {
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .rec-product-price {
-            color: #1976a5;
-            font-weight: bold;
-            font-size: 16px;
-        }
-        .rec-product-rating {
-            color: #f5b042;
-            font-size: 12px;
-            margin-top: 5px;
-        }
-    </style>
+}
+</style>
 </head>
 <body>
 
-    <!-- Header -->
-    <header>
-        <div class="logo">
-            <h1><span class="wave-emoji">🌊</span> SeaTask Marketplace</h1>
-            <p class="tagline">"When you feel good inside, the world mirrors it."</p>
-        </div>
-        <div class="header-icons">
-            <div class="cart-icon" id="cartIcon">
-                🛒 <span id="cartCount">0</span>
-            </div>
-            <div class="user-icon">👤</div>
-        </div>
-    </header>
+<header>
+<div class="logo">
+<h1><span class="wave-emoji">🌊</span> SeaTask Marketplace</h1>
+<p class="tagline">"When you feel good inside, the world mirrors it."</p>
+</div>
+<div class="header-icons">
+<div class="cart-icon" id="cartIcon">
+🛒 <span id="cartCount">0</span>
+</div>
+<div class="user-icon">👤</div>
+</div>
+</header>
 
-    <div class="product-detail-page" id="productDetailPage">
-        <a href="index.html" class="back-button">← Back to Marketplace</a>
-        <div id="detailContent">Loading...</div>
-    </div>
+<div class="product-detail-page" id="productDetailPage">
+<a href="index.html" class="back-button">← Back to Marketplace</a>
+<div id="detailContent">Loading...</div>
+</div>
 
-    /* Footer */
-footer {
-    background: #d4e6f1;
-    margin-top: 50px;
-    padding: 40px 20px 20px;
+<!-- Cart Modal -->
+<div id="cartModal" class="modal">
+<div class="modal-content">
+<span class="close">&times;</span>
+<h2>Your Shopping Cart</h2>
+<div id="cartItems"></div>
+<div class="cart-summary">
+<div class="cart-total">Total: RM <span id="cartTotal">0.00</span></div>
+<div class="cart-actions">
+<button id="continueShoppingBtn" class="btn-secondary">Continue Shopping</button>
+<button id="checkoutBtn" class="btn-primary">Proceed to Checkout</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Checkout Modal -->
+<div id="checkoutModal" class="modal">
+<div class="modal-content">
+<span class="close-checkout">&times;</span>
+<h2>Complete Your Order</h2>
+<form id="checkoutForm">
+<div class="form-group">
+<input type="text" name="fullName" placeholder="Full Name" required>
+</div>
+<div class="form-group">
+<input type="email" name="email" placeholder="Email Address" required>
+</div>
+<div class="form-group">
+<input type="tel" name="phone" placeholder="Phone Number" required>
+</div>
+<div class="form-group">
+<input type="text" name="address" placeholder="Delivery Address" required>
+</div>
+<div class="form-group">
+<select name="paymentMethod" required>
+<option value="">Select Payment Method</option>
+<option>Credit / Debit Card</option>
+<option>Sea-Pay Wallet</option>
+<option>Cash on Delivery</option>
+</select>
+</div>
+<button type="submit" class="btn-submit">Place Order</button>
+</form>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<footer>
+<div class="footer-content">
+<div class="footer-section">
+<h4>SeaTask Marketplace</h4>
+<p>Let gratitude be your daily habit.</p>
+</div>
+</div>
+<p class="copyright">&copy; 2025 SeaTask Marketplace — All rights reserved.</p>
+</footer>
+
+<script>
+// PRODUCT DATABASE
+const products = [
+{ id: 1, name: "Premium Cotton T-Shirt", category: "Shirt", price: 79.00, rating: 4.8, reviewCount: 1247, image: "https://img.freepik.com/premium-photo/blue-cotton-tshirt-with-luxury-design-tshirt-mockup_677428-1057.jpg", brand: "SeaTask Original", origin: "Made in Malaysia", material: "100% Organic Cotton", description: "Premium quality cotton t-shirt with SeaTask logo. Breathable, soft, and perfect for daily wear.", care: "Machine wash cold. Do not bleach. Tumble dry low.", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Blue", "Black", "White", "Red"] },
+{ id: 2, name: "Compact Travel Umbrella", category: "Accessories", price: 45.00, rating: 4.6, reviewCount: 892, image: "https://m.media-amazon.com/images/I/412DN-c2swL._AC_SL1500_.jpg", brand: "SeaTask Travel Gear", origin: "Made in China", material: "Fiberglass + Pongee Fabric", description: "Ultra-compact travel umbrella that fits in any bag.", care: "Air dry after use. Do not force close.", colors: ["Black", "Navy", "Red"] },
+{ id: 3, name: "Bluetooth Speaker", category: "Electronics", price: 129.00, rating: 4.9, reviewCount: 3156, image: "https://wonderfulengineering.com/wp-content/uploads/2022/11/10-Best-Portable-Bluetooth-Speaker9-1024x1024.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia", material: "ABS Plastic + Silicone", description: "Portable Bluetooth speaker with 20-hour battery life.", care: "Charge with included USB-C cable.", colors: ["Black", "Blue", "Red"] },
+{ id: 4, name: "Insulated Water Bottle", category: "Accessories", price: 35.00, rating: 4.7, reviewCount: 2143, image: "https://i5.walmartimages.com/seo/40oz-Insulated-Water-Bottles-2-Leak-Proof-Lids-Spout-Lid-Straw-Lid-Wide-Mouth-Sport-Bottle-Straw-Stainless-Steel-Powder-Coated-Flask-Double-Walled-Va_596521a9-6a7c-46e7-9b4d-23a9b9e550e8.4d4eaa5fb8ff569a4ba540b3024479e0.jpeg", brand: "SeaTask Hydration", origin: "Made in Malaysia", material: "18/8 Stainless Steel", description: "Double-walled insulated water bottle keeps drinks cold for 24 hours.", care: "Hand wash recommended.", colors: ["White", "Black", "Green", "Pink"], sizes: ["500ml", "750ml", "1L"] },
+{ id: 5, name: "Adjustable Baseball Cap", category: "Hat", price: 29.00, rating: 4.5, reviewCount: 567, image: "https://tse1.mm.bing.net/th/id/OIP.ti9ujzBZ9gwzAkfr34i6mgAAAA", brand: "SeaTask Original", origin: "Made in Vietnam", material: "Cotton Blend", description: "Classic baseball cap with embroidered SeaTask logo.", care: "Spot clean only. Air dry.", colors: ["Navy", "Black", "White", "Gray"] },
+{ id: 6, name: "Wireless Earbuds", category: "Electronics", price: 89.00, rating: 4.7, reviewCount: 1872, image: "https://m.media-amazon.com/images/I/610OFtgRe7L.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia", material: "ABS Plastic", description: "True wireless earbuds with charging case.", care: "Clean ear tips regularly.", colors: ["White", "Black"] },
+{ id: 7, name: "Gym Bag", category: "Accessories", price: 59.00, rating: 4.6, reviewCount: 734, image: "https://th.bing.com/th/id/R.da02c3df9c583a25a23afb65d2841547", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Waterproof Nylon", description: "Spacious gym bag with separate shoe compartment.", care: "Wipe clean with damp cloth.", colors: ["Black", "Gray", "Navy"] },
+{ id: 8, name: "Smart Watch Band", category: "Electronics", price: 49.00, rating: 4.4, reviewCount: 423, image: "https://m.media-amazon.com/images/I/716X7VCEaeL._AC_SL1500_.jpg", brand: "SeaTask Accessories", origin: "Made in Malaysia", material: "Medical Grade Silicone", description: "Comfortable smartwatch band with stainless steel buckle.", care: "Wipe with damp cloth.", colors: ["Black", "White", "Blue", "Red", "Green"] },
+{ id: 9, name: "Carbon Fiber Badminton Racket", category: "Badminton", price: 159.00, rating: 4.9, reviewCount: 891, image: "https://cdn.store-assets.com/s/964873/i/49661033.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Carbon Fiber + Graphite", description: "Professional-grade badminton racket with carbon fiber frame.", care: "Keep in protective bag.", colors: ["Black", "Blue", "Red"] },
+{ id: 10, name: "Durable Shuttlecock (6pcs)", category: "Badminton", price: 25.00, rating: 4.6, reviewCount: 456, image: "https://genesissports.co.ke/wp-content/uploads/2023/09/58e97e_f6f8a231e7cb427da7d80d6a4e636f36mv2.webp", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Goose Feather + Cork Base", description: "Premium goose feather shuttlecocks. Pack of 6.", care: "Store in cool dry place." },
+{ id: 11, name: "Badminton Training Bag", category: "Badminton", price: 69.00, rating: 4.7, reviewCount: 234, image: "https://badminton-shop.fr/wp-content/uploads/2025/09/Hundred-Trailblazer-Bag-White-Badmintontaske.jpg", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Polyester + Mesh", description: "Professional badminton bag for 2 rackets and accessories.", care: "Spot clean with mild detergent." },
+{ id: 12, name: "Professional Badminton Net", category: "Badminton", price: 89.00, rating: 4.8, reviewCount: 167, image: "https://myoutdoorsports.co.uk/wp-content/uploads/2022/04/buy-badminton-net-online.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Polyethylene + Steel Cable", description: "Regulation-size badminton net with steel cable.", care: "Store dry. Clean with soft brush." }
+];
+
+// CART FUNCTIONS
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+function saveCart() {
+localStorage.setItem('cart', JSON.stringify(cart));
+updateCartCount();
+updateCartTotal();
 }
 
-.footer-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: center;
+function updateCartCount() {
+const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+const countSpan = document.getElementById('cartCount');
+if (countSpan) countSpan.innerText = total;
 }
 
-.footer-center {
-    text-align: center;
+function updateCartTotal() {
+const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+const cartTotalSpan = document.getElementById('cartTotal');
+if (cartTotalSpan) cartTotalSpan.innerText = totalPrice.toFixed(2);
 }
 
-.footer-section h4 {
-    margin-bottom: 10px;
-    color: #0a4b6e;
-    font-size: 18px;
+function renderCartModal() {
+const cartItemsDiv = document.getElementById('cartItems');
+if (!cartItemsDiv) return;
+
+if (cart.length === 0) {
+cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Your cart is empty. 🛒</p>';
+return;
 }
 
-.footer-section p {
-    color: #1a3a5c;
-    font-size: 14px;
+cartItemsDiv.innerHTML = '';
+cart.forEach((item, index) => {
+const itemDiv = document.createElement('div');
+itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e0eef5;';
+itemDiv.innerHTML = `
+<div style="flex:1;">
+<div style="font-weight: 500;">${item.name}</div>
+<div style="font-size: 13px; color: #1976a5;">RM ${item.price.toFixed(2)} each</div>
+${item.variation ? `<div style="font-size: 11px; color: #7a8e9c;">${item.variation.color ? `Color: ${item.variation.color}` : ''} ${item.variation.size ? `Size: ${item.variation.size}` : ''}</div>` : ''}
+</div>
+<div style="display: flex; align-items: center; gap: 10px;">
+<button class="qty-btn" data-index="${index}" data-action="decr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">-</button>
+<span>${item.quantity}</span>
+<button class="qty-btn" data-index="${index}" data-action="incr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">+</button>
+<button class="qty-btn" data-index="${index}" data-action="remove" style="background:#ff6b6b; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; color:white;">🗑</button>
+</div>
+`;
+cartItemsDiv.appendChild(itemDiv);
+});
+
+document.querySelectorAll('.qty-btn').forEach(btn => {
+btn.addEventListener('click', (e) => {
+e.stopPropagation();
+const idx = parseInt(btn.dataset.index);
+const action = btn.dataset.action;
+
+if (action === 'incr') {
+cart[idx].quantity++;
+} else if (action === 'decr') {
+cart[idx].quantity--;
+if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+} else if (action === 'remove') {
+cart.splice(idx, 1);
+}
+saveCart();
+renderCartModal();
+updateCartTotal();
+});
+});
+updateCartTotal();
 }
 
-.copyright {
-    text-align: center;
-    margin-top: 25px;
-    padding-top: 15px;
-    border-top: 1px solid #b8cbd8;
-    font-size: 12px;
-    color: #4a627a;
+function addToCart(productId, quantity = 1, variation = null) {
+const product = products.find(p => p.id === productId);
+if (!product) return;
+
+const existing = cart.find(item => item.id === productId && JSON.stringify(item.variation) === JSON.stringify(variation));
+if (existing) {
+existing.quantity += quantity;
+} else {
+cart.push({ id: product.id, name: product.name, price: product.price, quantity: quantity, variation: variation });
+}
+saveCart();
+
+const toast = document.getElementById('toast');
+if (toast) {
+toast.innerText = `${product.name} added to cart!`;
+toast.style.opacity = '1';
+toast.style.visibility = 'visible';
+setTimeout(() => {
+toast.style.opacity = '0';
+toast.style.visibility = 'hidden';
+}, 2000);
+} else {
+alert(`${product.name} added to cart!`);
+}
 }
 
-    <script>
-        // ========== PRODUCT DATABASE ==========
-        const products = [
-            { id: 1, name: "Premium Cotton T-Shirt", category: "Shirt", price: 79.00, rating: 4.8, reviewCount: 1247, image: "https://img.freepik.com/premium-photo/blue-cotton-tshirt-with-luxury-design-tshirt-mockup_677428-1057.jpg", brand: "SeaTask Original", origin: "Made in Malaysia", material: "100% Organic Cotton", description: "Premium quality cotton t-shirt with SeaTask logo. Breathable, soft, and perfect for daily wear. Features reinforced stitching and eco-friendly packaging.", care: "Machine wash cold. Do not bleach. Tumble dry low.", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Blue", "Black", "White"] },
-            { id: 2, name: "Compact Travel Umbrella", category: "Accessories", price: 45.00, rating: 4.6, reviewCount: 892, image: "https://m.media-amazon.com/images/I/412DN-c2swL._AC_SL1500_.jpg", brand: "SeaTask Travel Gear", origin: "Made in China", material: "Fiberglass + Pongee Fabric", description: "Ultra-compact travel umbrella that fits in any bag. Windproof design with auto open/close button. UV protection coating.", care: "Air dry after use. Do not force close.", colors: ["Black", "Navy", "Red"] },
-            { id: 3, name: "Bluetooth Speaker", category: "Electronics", price: 129.00, rating: 4.9, reviewCount: 3156, image: "https://wonderfulengineering.com/wp-content/uploads/2022/11/10-Best-Portable-Bluetooth-Speaker9-1024x1024.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia, Made in China", material: "ABS Plastic + Silicone", description: "Portable Bluetooth speaker with 20-hour battery life. IPX7 waterproof rating. Deep bass and crystal clear sound. TWS pairing for stereo sound.", care: "Charge with included USB-C cable. Keep away from extreme heat.", colors: ["Black", "Blue", "Red"] },
-            { id: 4, name: "Insulated Water Bottle", category: "Accessories", price: 35.00, rating: 4.7, reviewCount: 2143, image: "https://i5.walmartimages.com/seo/40oz-Insulated-Water-Bottles-2-Leak-Proof-Lids-Spout-Lid-Straw-Lid-Wide-Mouth-Sport-Bottle-Straw-Stainless-Steel-Powder-Coated-Flask-Double-Walled-Va_596521a9-6a7c-46e7-9b4d-23a9b9e550e8.4d4eaa5fb8ff569a4ba540b3024479e0.jpeg", brand: "SeaTask Hydration", origin: "Made in Malaysia", material: "18/8 Stainless Steel", description: "Double-walled insulated water bottle keeps drinks cold for 24 hours or hot for 12 hours. Leakproof lid included. BPA-free.", care: "Hand wash recommended. Dishwasher safe top rack.", colors: ["White", "Black", "Green", "Pink"], sizes: ["500ml", "750ml", "1L"] },
-            { id: 5, name: "Adjustable Baseball Cap", category: "Hat", price: 29.00, rating: 4.5, reviewCount: 567, image: "https://tse1.mm.bing.net/th/id/OIP.ti9ujzBZ9gwzAkfr34i6mgAAAA", brand: "SeaTask Original", origin: "Made in Vietnam", material: "Cotton Blend", description: "Classic baseball cap with embroidered SeaTask logo. Adjustable strap fits all sizes. UV protection and breathable mesh back.", care: "Spot clean only. Air dry.", colors: ["Navy", "Black", "White", "Gray"] },
-            { id: 6, name: "Wireless Earbuds", category: "Electronics", price: 89.00, rating: 4.7, reviewCount: 1872, image: "https://m.media-amazon.com/images/I/610OFtgRe7L.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia, Made in China", material: "ABS Plastic", description: "True wireless earbuds with charging case. 30-hour total battery life. Touch controls. Built-in microphone for calls.", care: "Clean ear tips regularly. Charge case every 2 weeks.", colors: ["White", "Black"] },
-            { id: 7, name: "Gym Bag", category: "Accessories", price: 59.00, rating: 4.6, reviewCount: 734, image: "https://th.bing.com/th/id/R.da02c3df9c583a25a23afb65d2841547", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Waterproof Nylon", description: "Spacious gym bag with separate shoe compartment. Water-resistant material. Adjustable shoulder strap and padded handles.", care: "Wipe clean with damp cloth. Air dry.", colors: ["Black", "Gray", "Navy"] },
-            { id: 8, name: "Smart Watch Band", category: "Electronics", price: 49.00, rating: 4.4, reviewCount: 423, image: "https://m.media-amazon.com/images/I/716X7VCEaeL._AC_SL1500_.jpg", brand: "SeaTask Accessories", origin: "Made in Malaysia", material: "Medical Grade Silicone", description: "Comfortable smartwatch band compatible with most 22mm watches. Breathable design with stainless steel buckle.", care: "Wipe with damp cloth. Avoid prolonged sun exposure.", colors: ["Black", "White", "Blue", "Red", "Green"] },
-            { id: 9, name: "Carbon Fiber Badminton Racket", category: "Badminton", price: 159.00, rating: 4.9, reviewCount: 891, image: "https://cdn.store-assets.com/s/964873/i/49661033.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Carbon Fiber + Graphite", description: "Professional-grade badminton racket with carbon fiber frame. Lightweight (78g) with maximum tension support. Ideal for intermediate to advanced players.", care: "Keep in protective bag. Avoid extreme temperatures." },
-            { id: 10, name: "Durable Shuttlecock (6pcs)", category: "Badminton", price: 25.00, rating: 4.6, reviewCount: 456, image: "https://genesissports.co.ke/wp-content/uploads/2023/09/58e97e_f6f8a231e7cb427da7d80d6a4e636f36mv2.webp", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Goose Feather + Cork Base", description: "Premium goose feather shuttlecocks with natural cork base. Consistent flight performance. Pack of 6 shuttlecocks.", care: "Store in cool dry place." },
-            { id: 11, name: "Badminton Training Bag", category: "Badminton", price: 69.00, rating: 4.7, reviewCount: 234, image: "https://badminton-shop.fr/wp-content/uploads/2025/09/Hundred-Trailblazer-Bag-White-Badmintontaske.jpg", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Polyester + Mesh", description: "Professional badminton bag with space for 2 rackets, shoes, and accessories. Ventilated shoe compartment.", care: "Spot clean with mild detergent." },
-            { id: 12, name: "Professional Badminton Net", category: "Badminton", price: 89.00, rating: 4.8, reviewCount: 167, image: "https://myoutdoorsports.co.uk/wp-content/uploads/2022/04/buy-badminton-net-online.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Polyethylene + Steel Cable", description: "Regulation-size badminton net with steel cable reinforcement. Weather-resistant material. Easy setup.", care: "Store dry. Clean with soft brush." }
-        ];
+function getRecommendations(currentProduct) {
+let sameCategory = products.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
+if (sameCategory.length < 4) {
+const priceRange = products.filter(p => p.id !== currentProduct.id && p.category !== currentProduct.category && Math.abs(p.price - currentProduct.price) < 50);
+sameCategory = [...sameCategory, ...priceRange];
+}
+return sameCategory.slice(0, 4);
+}
 
-        // ========== CART FUNCTIONS ==========
-        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+function renderRecommendations(currentProduct) {
+const recommendations = getRecommendations(currentProduct);
+if (recommendations.length === 0) return '';
+return `
+<div class="recommendations-section">
+<div class="recommendations-title">✨ You May Also Like</div>
+<div class="recommendations-grid">
+${recommendations.map(rec => `
+<a href="product-detail.html?id=${rec.id}" class="rec-product-card">
+<img class="rec-product-img" src="${rec.image}" alt="${rec.name}">
+<div class="rec-product-info">
+<div class="rec-product-name">${rec.name}</div>
+<div class="rec-product-price">RM ${rec.price.toFixed(2)}</div>
+<div class="rec-product-rating">⭐ ${rec.rating}/5</div>
+</div>
+</a>
+`).join('')}
+</div>
+</div>
+`;
+}
 
-        function saveCart() {
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
-        }
+function loadProductDetail() {
+const urlParams = new URLSearchParams(window.location.search);
+const productId = parseInt(urlParams.get('id'));
+const product = products.find(p => p.id === productId);
 
-        function updateCartCount() {
-            const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-            const countSpan = document.getElementById('cartCount');
-            if (countSpan) countSpan.innerText = total;
-        }
+if (!product) {
+document.getElementById('detailContent').innerHTML = '<p>Product not found.</p>';
+return;
+}
 
-        function addToCart(productId, quantity = 1, variation = null) {
-            const product = products.find(p => p.id === productId);
-            if (!product) return;
-            const existing = cart.find(item => item.id === productId && JSON.stringify(item.variation) === JSON.stringify(variation));
-            if (existing) {
-                existing.quantity += quantity;
-            } else {
-                cart.push({ 
-                    id: product.id, 
-                    name: product.name, 
-                    price: product.price, 
-                    quantity: quantity,
-                    variation: variation
-                });
-            }
-            saveCart();
-            alert(`${product.name} added to cart!`);
-        }
+let variationsHtml = '';
+if (product.colors && product.colors.length > 0) {
+variationsHtml += `
+<div class="variation-label">🎨 Color:</div>
+<div class="variation-options" id="colorOptions">
+${product.colors.map((color, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>`).join('')}
+</div>
+`;
+}
+if (product.sizes && product.sizes.length > 0) {
+variationsHtml += `
+<div class="variation-label" style="margin-top:15px;">📏 Size:</div>
+<div class="variation-options" id="sizeOptions">
+${product.sizes.map((size, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>`).join('')}
+</div>
+`;
+}
 
-        // ========== GET RECOMMENDATIONS ==========
-        function getRecommendations(currentProduct) {
-            // Get products from same category, exclude current product, limit to 4
-            let sameCategory = products.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
-            
-            // If not enough, add products from similar price range
-            if (sameCategory.length < 4) {
-                const priceRange = products.filter(p => 
-                    p.id !== currentProduct.id && 
-                    p.category !== currentProduct.category &&
-                    Math.abs(p.price - currentProduct.price) < 50
-                );
-                sameCategory = [...sameCategory, ...priceRange];
-            }
-            
-            // Return top 4 unique products
-            return sameCategory.slice(0, 4);
-        }
+const sampleReviews = [
+{ name: "Ahmad F.", rating: 5, date: "2 days ago", text: "Excellent quality! Fast delivery and well packaged." },
+{ name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase." },
+{ name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price." }
+];
 
-        // ========== RENDER RECOMMENDATIONS ==========
-        function renderRecommendations(currentProduct) {
-            const recommendations = getRecommendations(currentProduct);
-            if (recommendations.length === 0) return '';
-            
-            return `
-                <div class="recommendations-section">
-                    <div class="recommendations-title">✨ You May Also Like</div>
-                    <div class="recommendations-grid">
-                        ${recommendations.map(rec => `
-                            <a href="product-detail.html?id=${rec.id}" class="rec-product-card">
-                                <img class="rec-product-img" src="${rec.image}" alt="${rec.name}">
-                                <div class="rec-product-info">
-                                    <div class="rec-product-name">${rec.name}</div>
-                                    <div class="rec-product-price">RM ${rec.price.toFixed(2)}</div>
-                                    <div class="rec-product-rating">⭐ ${rec.rating}/5</div>
-                                </div>
-                            </a>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
+const reviewsHtml = sampleReviews.map(review => `
+<div class="review-card">
+<div class="reviewer-name">${review.name}</div>
+<div class="review-rating">${'⭐'.repeat(review.rating)} ${review.rating}/5</div>
+<div class="review-date">${review.date}</div>
+<div class="review-text">${review.text}</div>
+</div>
+`).join('');
 
-        // ========== LOAD PRODUCT DETAIL ==========
-        function loadProductDetail() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = parseInt(urlParams.get('id'));
-            const product = products.find(p => p.id === productId);
-            
-            if (!product) {
-                document.getElementById('detailContent').innerHTML = '<p>Product not found.</p>';
-                return;
-            }
+const recommendationsHtml = renderRecommendations(product);
 
-            let variationsHtml = '';
-            if (product.colors) {
-                variationsHtml += `
-                    <div class="variation-label">Color Family:</div>
-                    <div class="variation-options" id="colorOptions">
-                        ${product.colors.map((color, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>`).join('')}
-                    </div>
-                `;
-            }
-            if (product.sizes) {
-                variationsHtml += `
-                    <div class="variation-label" style="margin-top:15px;">Size:</div>
-                    <div class="variation-options" id="sizeOptions">
-                        ${product.sizes.map((size, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>`).join('')}
-                    </div>
-                `;
-            }
+const html = `
+<div class="product-detail-main">
+<div class="product-detail-gallery">
+<div class="image-wrapper">
+<img src="${product.image}" alt="${product.name}" id="mainProductImage">
+</div>
+</div>
+<div class="product-detail-info">
+<div class="product-detail-title">${product.name}</div>
+<div class="product-detail-brand">Brand: ${product.brand || 'SeaTask Original'}</div>
+<div class="product-detail-rating">
+<div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}/5</div>
+<div class="rating-count">${product.reviewCount || 0} Ratings</div>
+</div>
+<div class="product-detail-price">
+<span class="current-price">RM ${product.price.toFixed(2)}</span>
+<span class="original-price">RM ${(product.price * 1.5).toFixed(2)}</span>
+<span class="discount">-${Math.round((1 - product.price/(product.price*1.5)) * 100)}%</span>
+</div>
 
-            // Sample reviews
-            const sampleReviews = [
-                { name: "Ahmad F.", rating: 5, date: "2 days ago", text: "Excellent quality! Fast delivery and well packaged. Will buy again!" },
-                { name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase. Product matches description perfectly." },
-                { name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price. Shipping was quick." },
-                { name: "John L.", rating: 5, date: "2 weeks ago", text: "SeaTask never disappoints. Highly recommended!" }
-            ];
+<div class="product-variations">
+${variationsHtml}
+</div>
 
-            const reviewsHtml = sampleReviews.map(review => `
-                <div class="review-card">
-                    <div class="reviewer-name">${review.name}</div>
-                    <div class="review-rating">${'⭐'.repeat(review.rating)} ${review.rating}/5</div>
-                    <div class="review-date">${review.date}</div>
-                    <div class="review-text">${review.text}</div>
-                </div>
-            `).join('');
+<div class="quantity-selector">
+<button class="quantity-btn" id="decrQty">-</button>
+<span class="quantity-value" id="qtyValue">1</span>
+<button class="quantity-btn" id="incrQty">+</button>
+</div>
 
-            // Render recommendations
-            const recommendationsHtml = renderRecommendations(product);
+<button class="add-to-cart-detail" id="addToCartBtn">Add to Cart</button>
 
-            const html = `
-                <div class="product-detail-main">
-                    <div class="product-detail-gallery">
-                        <img src="${product.image}" alt="${product.name}">
-                    </div>
-                    <div class="product-detail-info">
-                        <div class="product-detail-title">${product.name}</div>
-                        <div class="product-detail-brand">Brand: ${product.brand || 'SeaTask Original'}</div>
-                        <div class="product-detail-rating">
-                            <div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}/5</div>
-                            <div class="rating-count">${product.reviewCount || 0} Ratings</div>
-                        </div>
-                        <div class="product-detail-price">
-                            <span class="current-price">RM ${product.price.toFixed(2)}</span>
-                            <span class="original-price">RM ${(product.price * 1.5).toFixed(2)}</span>
-                            <span class="discount">-${Math.round((1 - product.price/(product.price*1.5)) * 100)}%</span>
-                        </div>
-                        
-                        <div class="product-variations">
-                            ${variationsHtml}
-                        </div>
-                        
-                        <div class="quantity-selector">
-                            <button class="quantity-btn" id="decrQty">-</button>
-                            <span class="quantity-value" id="qtyValue">1</span>
-                            <button class="quantity-btn" id="incrQty">+</button>
-                        </div>
-                        
-                        <button class="add-to-cart-detail" id="addToCartBtn">Add to Cart</button>
-                        
-                        <div class="seller-info">
-                            <div>🏪 <span class="seller-name">SeaTask Official Store</span></div>
-                            <div>⭐ 98% Positive Ratings • 9-Year Store • Preferred Seller</div>
-                            <div style="margin-top:8px;"><button style="background:#e0eef5; border:none; padding:5px 12px; border-radius:20px; cursor:pointer;">Chat</button> <button style="background:#e0eef5; border:none; padding:5px 12px; border-radius:20px; margin-left:8px; cursor:pointer;">GO TO STORE</button></div>
-                        </div>
-                        
-                        <div class="delivery-info">
-                            <div class="delivery-row"><span>🚚 Delivery Options:</span><span>Wp Kuala Lumpur, 50450</span></div>
-                            <div class="delivery-row"><span>📅 Guaranteed by</span><span>${new Date(Date.now() + 3*24*60*60*1000).toLocaleDateString()} - ${new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString()}</span></div>
-                            <div class="delivery-row"><span>💰 Shipping Fee</span><span>RM 4.90 (Standard)</span></div>
-                        </div>
-                        
-                        <div class="warranty-info">
-                            ✅ Authentic • Change of Mind • 30 Days Free Return • 2 Years Manufacturer Warranty
-                        </div>
-                        
-                        <div class="details-description">
-                            <strong>📝 Product Description:</strong><br>
-                            ${product.description}
-                            <br><br>
-                            <strong>🧵 Material:</strong> ${product.material || 'Premium Quality'}<br>
-                            <strong>📍 Origin:</strong> ${product.origin || 'Made in Malaysia'}<br>
-                            <strong>🧼 Care Instructions:</strong> ${product.care || 'Follow standard care instructions.'}
-                        </div>
-                    </div>
-                </div>
-                
-                ${recommendationsHtml}
-                
-                <div class="reviews-section">
-                    <h3>Customer Reviews (${product.reviewCount || 0})</h3>
-                    ${reviewsHtml}
-                </div>
-            `;
-            
-            document.getElementById('detailContent').innerHTML = html;
-            
-            // Quantity selector
-            let qty = 1;
-            document.getElementById('incrQty')?.addEventListener('click', () => {
-                qty++;
-                document.getElementById('qtyValue').innerText = qty;
-            });
-            document.getElementById('decrQty')?.addEventListener('click', () => {
-                if (qty > 1) qty--;
-                document.getElementById('qtyValue').innerText = qty;
-            });
-            
-            // Add to cart
-            document.getElementById('addToCartBtn')?.addEventListener('click', () => {
-                addToCart(product.id, qty);
-            });
-            
-            // Variation buttons
-            document.querySelectorAll('.variation-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const parent = this.parentElement;
-                    parent.querySelectorAll('.variation-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                });
-            });
-        }
+<div class="seller-info">
+<div>🏪 <span class="seller-name">SeaTask Official Store</span></div>
+<div>⭐ 98% Positive Ratings • Preferred Seller</div>
+</div>
 
-        updateCartCount();
-        loadProductDetail();
-    </script>
+<div class="delivery-info">
+<div class="delivery-row"><span>🚚 Delivery:</span><span>Kuala Lumpur</span></div>
+<div class="delivery-row"><span>📅 Estimated Delivery:</span><span>${new Date(Date.now() + 3*24*60*60*1000).toLocaleDateString()} - ${new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString()}</span></div>
+</div>
+
+<div class="warranty-info">
+✅ Authentic • 30 Days Free Return • 2 Year Warranty
+</div>
+
+<div class="details-description">
+<strong>📝 Description:</strong><br>
+${product.description}
+<br><br>
+<strong>🧵 Material:</strong> ${product.material || 'Premium Quality'}<br>
+<strong>📍 Origin:</strong> ${product.origin || 'Made in Malaysia'}<br>
+<strong>🧼 Care:</strong> ${product.care || 'Standard care instructions.'}
+</div>
+</div>
+</div>
+
+${recommendationsHtml}
+
+<div class="reviews-section">
+<h3>Customer Reviews (${product.reviewCount || 0})</h3>
+${reviewsHtml}
+</div>
+`;
+
+document.getElementById('detailContent').innerHTML = html;
+
+let qty = 1;
+document.getElementById('incrQty')?.addEventListener('click', () => { qty++; document.getElementById('qtyValue').innerText = qty; });
+document.getElementById('decrQty')?.addEventListener('click', () => { if (qty > 1) qty--; document.getElementById('qtyValue').innerText = qty; });
+
+document.getElementById('addToCartBtn')?.addEventListener('click', () => {
+const selectedColor = document.querySelector('[data-type="color"].active')?.getAttribute('data-value') || null;
+const selectedSize = document.querySelector('[data-type="size"].active')?.getAttribute('data-value') || null;
+addToCart(product.id, qty, { color: selectedColor, size: selectedSize });
+});
+
+document.querySelectorAll('.variation-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const parent = this.parentElement;
+parent.querySelectorAll('.variation-btn').forEach(b => b.classList.remove('active'));
+this.classList.add('active');
+});
+});
+
+if (typeof addAngleDots === 'function') {
+setTimeout(() => addAngleDots(), 100);
+}
+}
+
+function initModals() {
+const cartModal = document.getElementById('cartModal');
+const checkoutModal = document.getElementById('checkoutModal');
+const cartIcon = document.getElementById('cartIcon');
+
+if (cartIcon) {
+cartIcon.addEventListener('click', () => {
+renderCartModal();
+if (cartModal) cartModal.style.display = 'flex';
+});
+}
+
+const closeBtn = document.querySelector('#cartModal .close');
+const closeCheckout = document.querySelector('#checkoutModal .close-checkout');
+const continueBtn = document.getElementById('continueShoppingBtn');
+const checkoutBtn = document.getElementById('checkoutBtn');
+
+if (closeBtn) closeBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
+if (closeCheckout) closeCheckout.addEventListener('click', () => { if (checkoutModal) checkoutModal.style.display = 'none'; });
+if (continueBtn) continueBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
+
+if (checkoutBtn) {
+checkoutBtn.addEventListener('click', () => {
+if (cart.length === 0) {
+const toast = document.getElementById('toast');
+if (toast) {
+toast.innerText = 'Cart is empty! Add items first.';
+toast.style.opacity = '1';
+toast.style.visibility = 'visible';
+setTimeout(() => {
+toast.style.opacity = '0';
+toast.style.visibility = 'hidden';
+}, 2000);
+}
+return;
+}
+if (cartModal) cartModal.style.display = 'none';
+if (checkoutModal) checkoutModal.style.display = 'flex';
+});
+}
+
+const checkoutForm = document.getElementById('checkoutForm');
+if (checkoutForm) {
+checkoutForm.addEventListener('submit', (e) => {
+e.preventDefault();
+
+if (cart.length === 0) {
+alert('Cart is empty!');
+return;
+}
+
+// Clear cart
+cart = [];
+saveCart();
+
+const toast = document.getElementById('toast');
+if (toast) {
+toast.innerText = 'Order placed successfully! Thank you for shopping at SeaTask.';
+toast.style.opacity = '1';
+toast.style.visibility = 'visible';
+setTimeout(() => {
+toast.style.opacity = '0';
+toast.style.visibility = 'hidden';
+}, 3000);
+} else {
+alert('Order placed successfully!');
+}
+
+if (checkoutModal) checkoutModal.style.display = 'none';
+checkoutForm.reset();
+
+if (cartModal && cartModal.style.display === 'flex') {
+renderCartModal();
+}
+});
+}
+
+window.addEventListener('click', (e) => {
+if (cartModal && e.target === cartModal) cartModal.style.display = 'none';
+if (checkoutModal && e.target === checkoutModal) checkoutModal.style.display = 'none';
+});
+}
+
+updateCartCount();
+updateCartTotal();
+loadProductDetail();
+initModals();
+</script>
+<!-- Footer Enhancements - Payment methods, Social media, Newsletter -->
+<script src="footer-enhancements.js"></script>
+<!-- Advanced Filters (for consistency) -->
+<script src="advanced-filters.js"></script>
+
+<!-- Activity History Tracker -->
+<script src="cart-history-tracker.js"></script>
+
 </body>
 </html>
