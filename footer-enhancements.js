@@ -1,11 +1,10 @@
-// ========== FOOTER ENHANCEMENT WITH SUPABASE ==========
-// Adds: Payment method logos, Social media links, Newsletter subscription (saved to Supabase)
+// ========== FOOTER ENHANCEMENT WITH POSTGRESQL ==========
+// Adds: Payment method logos, Social media links, Newsletter subscription (saved to PostgreSQL via API)
 // NO conflicts with existing code
 
 (function() {
-    // Supabase configuration
-    const FOOTER_SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
-    const FOOTER_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsYWRsZWp0a2dqenBlaHZ6a3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODEwMTcsImV4cCI6MjA5MzY1NzAxN30.uzMR3lWl0GrKKIcpWZRDZ9ac1y_gdjOocAUweSSZMgI';
+    // API endpoint for newsletter (change to your server URL)
+    const API_URL = 'http://localhost:3002'; // Your API server address
     
     // Check if enhanced footer already exists
     function isFooterEnhanced() {
@@ -84,74 +83,33 @@
         // Track social link clicks
         trackSocialClicks();
         
-        console.log('✅ Enhanced footer with Supabase integration added!');
+        console.log('✅ Enhanced footer with PostgreSQL integration added!');
     }
     
-    // Get or create user ID for newsletter
-    function getNewsletterUserId() {
-        let userId = localStorage.getItem('seatask_newsletter_user_id');
-        if (!userId) {
-            userId = 'newsletter_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            localStorage.setItem('seatask_newsletter_user_id', userId);
-        }
-        return userId;
-    }
-    
-    // Save newsletter subscription to Supabase
-    async function saveNewsletterToSupabase(email) {
-        const userId = getNewsletterUserId();
-        const timestamp = new Date().toISOString();
-        
+    // Save newsletter subscription to PostgreSQL via API
+    async function saveNewsletterToPostgreSQL(email) {
         try {
-            // Check if email already exists
-            const checkResponse = await fetch(`${FOOTER_SUPABASE_URL}/rest/v1/newsletter_subscribers?email=eq.${encodeURIComponent(email)}&select=email`, {
-                headers: {
-                    'apikey': FOOTER_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${FOOTER_SUPABASE_ANON_KEY}`
-                }
-            });
-            
-            const existing = await checkResponse.json();
-            
-            if (existing && existing.length > 0) {
-                showNewsletterMessage('This email is already subscribed!', 'warning');
-                return false;
-            }
-            
-            // Save new subscription
-            const response = await fetch(`${FOOTER_SUPABASE_URL}/rest/v1/newsletter_subscribers`, {
+            const response = await fetch(`${API_URL}/api/subscribe`, {
                 method: 'POST',
                 headers: {
-                    'apikey': FOOTER_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${FOOTER_SUPABASE_ANON_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    user_id: userId,
-                    email: email,
-                    subscribed_at: timestamp,
-                    status: 'active',
-                    source: 'website_footer'
-                })
+                body: JSON.stringify({ email: email })
             });
             
-            if (response.ok) {
-                showNewsletterMessage('✅ Thanks for subscribing! Check your inbox for updates.', 'success');
+            const result = await response.json();
+            
+            if (result.success) {
+                showNewsletterMessage(result.message, 'success');
                 document.getElementById('newsletterEmail').value = '';
-                
-                // Also save to localStorage for offline fallback
-                const localSubs = JSON.parse(localStorage.getItem('newsletter_subscribers') || '[]');
-                if (!localSubs.includes(email)) {
-                    localSubs.push(email);
-                    localStorage.setItem('newsletter_subscribers', JSON.stringify(localSubs));
-                }
                 return true;
             } else {
-                throw new Error('Failed to save');
+                showNewsletterMessage(result.message, 'warning');
+                return false;
             }
         } catch (error) {
             console.error('Error saving newsletter:', error);
-            // Fallback to localStorage if Supabase fails
+            // Fallback to localStorage if API is down
             fallbackSaveNewsletter(email);
             return false;
         }
@@ -160,13 +118,15 @@
     // Fallback save to localStorage
     function fallbackSaveNewsletter(email) {
         const subscribers = JSON.parse(localStorage.getItem('newsletter_subscribers_fallback') || '[]');
-        if (!subscribers.includes(email)) {
+        const exists = subscribers.some(sub => sub.email === email);
+        
+        if (!exists) {
             subscribers.push({
                 email: email,
                 date: new Date().toISOString()
             });
             localStorage.setItem('newsletter_subscribers_fallback', JSON.stringify(subscribers));
-            showNewsletterMessage('✅ Subscribed! (Saved locally - will sync to database when online)', 'success');
+            showNewsletterMessage('✅ Subscribed! (Saved locally - will sync when online)', 'success');
             document.getElementById('newsletterEmail').value = '';
         } else {
             showNewsletterMessage('You are already subscribed!', 'warning');
@@ -194,11 +154,22 @@
     // Initialize newsletter form
     function initNewsletterSubscription() {
         const form = document.getElementById('newsletterForm');
-        if (!form) return;
+        if (!form) {
+            setTimeout(initNewsletterSubscription, 500);
+            return;
+        }
         
-        form.addEventListener('submit', async (e) => {
+        // Remove any existing listener to prevent duplicate
+        const newForm = form.cloneNode(true);
+        form.parentNode.replaceChild(newForm, form);
+        
+        newForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            e.stopPropagation();
+            
             const emailInput = document.getElementById('newsletterEmail');
+            if (!emailInput) return;
+            
             const email = emailInput.value.trim();
             
             if (!email || !email.includes('@')) {
@@ -208,11 +179,13 @@
             
             // Disable button during submission
             const submitBtn = document.getElementById('newsletterSubscribeBtn');
+            if (!submitBtn) return;
+            
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '⏳ Subscribing...';
             submitBtn.disabled = true;
             
-            await saveNewsletterToSupabase(email);
+            await saveNewsletterToPostgreSQL(email);
             
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
@@ -226,45 +199,17 @@
             link.addEventListener('click', (e) => {
                 const social = link.getAttribute('data-social');
                 console.log(`📱 Social link clicked: ${social}`);
-                
-                // Save click to Supabase for analytics
-                saveSocialClickToSupabase(social);
             });
         });
     }
     
-    // Save social click analytics to Supabase
-    async function saveSocialClickToSupabase(socialPlatform) {
-        try {
-            await fetch(`${FOOTER_SUPABASE_URL}/rest/v1/social_clicks`, {
-                method: 'POST',
-                headers: {
-                    'apikey': FOOTER_SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${FOOTER_SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    platform: socialPlatform,
-                    clicked_at: new Date().toISOString(),
-                    user_agent: navigator.userAgent,
-                    page_url: window.location.href
-                })
-            });
-        } catch (error) {
-            console.log('Social click tracking saved locally');
-            // Save to localStorage as fallback
-            const clicks = JSON.parse(localStorage.getItem('social_clicks_fallback') || '[]');
-            clicks.push({
-                platform: socialPlatform,
-                timestamp: new Date().toISOString()
-            });
-            localStorage.setItem('social_clicks_fallback', JSON.stringify(clicks.slice(-50)));
-        }
-    }
-    
     // Add CSS styles for enhanced footer
     function addFooterStyles() {
+        // Check if styles already added
+        if (document.getElementById('footer-enhancement-styles')) return;
+        
         const style = document.createElement('style');
+        style.id = 'footer-enhancement-styles';
         style.textContent = `
             .enhanced-footer {
                 background: linear-gradient(135deg, #1a3a5c, #0f2b44);
@@ -300,7 +245,6 @@
                 background: #4fc3f7;
             }
             
-            /* Payment Methods */
             .payment-methods {
                 display: flex;
                 gap: 15px;
@@ -341,7 +285,6 @@
                 margin-top: 10px;
             }
             
-            /* Social Links */
             .social-links {
                 display: flex;
                 gap: 20px;
@@ -369,7 +312,6 @@
                 font-size: 20px;
             }
             
-            /* Newsletter Form */
             .newsletter-text {
                 font-size: 13px;
                 opacity: 0.8;
@@ -439,7 +381,6 @@
                 color: white;
             }
             
-            /* Responsive */
             @media (max-width: 768px) {
                 .footer-container {
                     grid-template-columns: 1fr;
@@ -481,5 +422,5 @@
         initFooterEnhancement();
     }
     
-    console.log('✅ Footer enhancement ready - connects to Supabase!');
+    console.log('✅ Footer enhancement ready - connects to PostgreSQL API!');
 })();

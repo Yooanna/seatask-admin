@@ -1,15 +1,18 @@
 // ========== ADVANCED PRODUCT FILTERING WITH SUPABASE ==========
 // Adds: Wide sidebar filters, price range, size, color, category filtering
 // All selections save to Supabase, not localStorage
-// UPDATED: Wider sidebar for better visibility
+// UPDATED: Price range uses only slider with max price 200
 
 (function() {
     const SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsYWRsZWp0a2dqenBlaHZ6a3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODEwMTcsImV4cCI6MjA5MzY1NzAxN30.uzMR3lWl0GrKKIcpWZRDZ9ac1y_gdjOocAUweSSZMgI';
     
+    // MAX PRICE set to 200 (highest product is RM159)
+    const MAX_PRICE = 200;
+    
     let currentFilters = {
         categories: [],
-        priceRange: { min: 0, max: 1000 },
+        priceRange: { min: 0, max: MAX_PRICE },
         sizes: [],
         colors: [],
         sortBy: 'default',
@@ -34,28 +37,21 @@
                     <input type="text" id="productSearchInput" placeholder="Search by name..." class="search-input">
                 </div>
                 
-                <!-- Price Range Filter -->
+                <!-- Price Range Filter - SLIDER ONLY -->
                 <div class="filter-group">
-                    <h4>💰 Price Range</h4>
+                    <h4>💰 Price Range (RM)</h4>
                     <div class="price-range-container">
-                        <div class="price-inputs">
-                            <div class="price-input-wrapper">
-                                <span class="price-currency">RM</span>
-                                <input type="number" id="minPrice" placeholder="Min" value="0">
-                            </div>
-                            <span class="price-separator">-</span>
-                            <div class="price-input-wrapper">
-                                <span class="price-currency">RM</span>
-                                <input type="number" id="maxPrice" placeholder="Max" value="1000">
-                            </div>
+                        <div class="price-value-display">
+                            <span>RM 0</span>
+                            <span>RM <span id="priceValue">${MAX_PRICE}</span>+</span>
                         </div>
-                        <input type="range" id="priceSlider" min="0" max="1000" step="10" value="1000">
+                        <input type="range" id="priceSlider" min="0" max="${MAX_PRICE}" step="10" value="${MAX_PRICE}">
                         <div class="price-labels">
                             <span>RM 0</span>
-                            <span>RM 250</span>
-                            <span>RM 500</span>
-                            <span>RM 750</span>
-                            <span>RM 1000+</span>
+                            <span>RM 50</span>
+                            <span>RM 100</span>
+                            <span>RM 150</span>
+                            <span>RM ${MAX_PRICE}+</span>
                         </div>
                     </div>
                 </div>
@@ -207,36 +203,15 @@
             });
         }
         
-        // Price range slider
+        // Price range slider (only slider, no input fields)
         const priceSlider = document.getElementById('priceSlider');
-        const minPriceInput = document.getElementById('minPrice');
-        const maxPriceInput = document.getElementById('maxPrice');
+        const priceValue = document.getElementById('priceValue');
         
         if (priceSlider) {
             priceSlider.addEventListener('input', (e) => {
-                maxPriceInput.value = e.target.value;
-                currentFilters.priceRange.max = parseInt(e.target.value);
-                updateActiveFiltersDisplay();
-                applyFilters();
-            });
-        }
-        
-        if (maxPriceInput) {
-            maxPriceInput.addEventListener('change', (e) => {
-                let val = parseInt(e.target.value);
-                if (isNaN(val)) val = 1000;
-                priceSlider.value = val;
-                currentFilters.priceRange.max = val;
-                updateActiveFiltersDisplay();
-                applyFilters();
-            });
-        }
-        
-        if (minPriceInput) {
-            minPriceInput.addEventListener('change', (e) => {
-                let val = parseInt(e.target.value);
-                if (isNaN(val)) val = 0;
-                currentFilters.priceRange.min = val;
+                const value = parseInt(e.target.value);
+                if (priceValue) priceValue.innerText = value;
+                currentFilters.priceRange.max = value;
                 updateActiveFiltersDisplay();
                 applyFilters();
             });
@@ -349,8 +324,8 @@
             activeItems.push(`<span class="active-filter-tag">📁 ${currentFilters.categories.join(', ')} <button class="remove-filter" data-type="categories">✖</button></span>`);
         }
         
-        if (currentFilters.priceRange.max < 1000 || currentFilters.priceRange.min > 0) {
-            activeItems.push(`<span class="active-filter-tag">💰 RM ${currentFilters.priceRange.min} - RM ${currentFilters.priceRange.max} <button class="remove-filter" data-type="price">✖</button></span>`);
+        if (currentFilters.priceRange.max < MAX_PRICE || currentFilters.priceRange.min > 0) {
+            activeItems.push(`<span class="active-filter-tag">💰 Up to RM ${currentFilters.priceRange.max} <button class="remove-filter" data-type="price">✖</button></span>`);
         }
         
         if (currentFilters.sizes.length > 0) {
@@ -394,10 +369,10 @@
                 break;
             case 'price':
                 const priceSlider = document.getElementById('priceSlider');
-                const maxPriceInput = document.getElementById('maxPrice');
-                if (priceSlider) priceSlider.value = '1000';
-                if (maxPriceInput) maxPriceInput.value = '1000';
-                currentFilters.priceRange = { min: 0, max: 1000 };
+                if (priceSlider) priceSlider.value = MAX_PRICE;
+                const priceValue = document.getElementById('priceValue');
+                if (priceValue) priceValue.innerText = MAX_PRICE;
+                currentFilters.priceRange = { min: 0, max: MAX_PRICE };
                 break;
             case 'sizes':
                 currentFilters.sizes = [];
@@ -423,14 +398,12 @@
     
     // Clear all filters
     function clearAllFilters() {
-        // Reset price
+        // Reset price slider
         const priceSlider = document.getElementById('priceSlider');
-        const maxPriceInput = document.getElementById('maxPrice');
-        const minPriceInput = document.getElementById('minPrice');
-        if (priceSlider) priceSlider.value = '1000';
-        if (maxPriceInput) maxPriceInput.value = '1000';
-        if (minPriceInput) minPriceInput.value = '0';
-        currentFilters.priceRange = { min: 0, max: 1000 };
+        if (priceSlider) priceSlider.value = MAX_PRICE;
+        const priceValue = document.getElementById('priceValue');
+        if (priceValue) priceValue.innerText = MAX_PRICE;
+        currentFilters.priceRange = { min: 0, max: MAX_PRICE };
         
         // Reset search
         const searchInput = document.getElementById('productSearchInput');
@@ -673,7 +646,7 @@
                 gap: 35px;
             }
             
-            /* WIDE Filter Sidebar - BIGGER AND MORE VISIBLE */
+            /* WIDE Filter Sidebar */
             .filter-sidebar.wide-sidebar {
                 width: 320px;
                 min-width: 320px;
@@ -767,41 +740,14 @@
                 box-shadow: 0 0 0 3px rgba(25,118,165,0.1);
             }
             
-            /* Price Range */
-            .price-inputs {
+            /* Price Range - SLIDER ONLY */
+            .price-value-display {
                 display: flex;
-                gap: 12px;
-                align-items: center;
-                margin-bottom: 15px;
-            }
-            
-            .price-input-wrapper {
-                flex: 1;
-                display: flex;
-                align-items: center;
-                background: #f5f8fa;
-                border-radius: 12px;
-                border: 1px solid #c8dce8;
-            }
-            
-            .price-currency {
-                padding: 10px 8px 10px 12px;
-                font-size: 13px;
-                color: #7a8e9c;
-            }
-            
-            .price-input-wrapper input {
-                flex: 1;
-                padding: 10px 8px 10px 0;
-                border: none;
-                background: transparent;
-                outline: none;
+                justify-content: space-between;
+                margin-bottom: 12px;
                 font-size: 14px;
-            }
-            
-            .price-separator {
-                color: #7a8e9c;
-                font-weight: bold;
+                color: #1976a5;
+                font-weight: 500;
             }
             
             #priceSlider {
@@ -833,7 +779,7 @@
                 margin-top: 8px;
             }
             
-            /* Size Buttons - BIGGER */
+            /* Size Buttons */
             .size-options {
                 display: flex;
                 flex-wrap: wrap;
@@ -863,7 +809,7 @@
                 transform: translateY(-2px);
             }
             
-            /* Color Buttons - BIGGER */
+            /* Color Buttons */
             .color-options {
                 display: flex;
                 flex-wrap: wrap;
@@ -1119,7 +1065,7 @@
                 applyFilters();
             };
         }
-        console.log('✅ Advanced filters loaded with wider sidebar!');
+        console.log('✅ Advanced filters loaded with price slider only (max RM200)!');
     }
     
     if (document.readyState === 'loading') {

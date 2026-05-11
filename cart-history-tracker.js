@@ -1,6 +1,7 @@
 // ========== USER CART & ORDER HISTORY TRACKER ==========
 // Tracks all user selections, cart items, and order history in Supabase
 // NO localStorage for persistent data
+// UPDATED: Removed Recent Views tab - only Orders and Cart Items
 
 (function() {
     const SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
@@ -32,57 +33,6 @@
         }
         currentUserId = userId;
         return userId;
-    }
-    
-    // Track product view (when user clicks on a product)
-    async function trackProductView(productId, productName, productCategory) {
-        const userId = getCurrentUserId();
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/product_views`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    product_id: productId,
-                    product_name: productName,
-                    product_category: productCategory,
-                    viewed_at: new Date().toISOString()
-                })
-            });
-            console.log(`📊 Tracked view: ${productName}`);
-        } catch (error) {
-            console.log('View tracking fallback to localStorage');
-            // Fallback to localStorage
-            const views = JSON.parse(localStorage.getItem('product_views_fallback') || '[]');
-            views.push({ productId, productName, timestamp: new Date().toISOString() });
-            localStorage.setItem('product_views_fallback', JSON.stringify(views.slice(-50)));
-        }
-    }
-    
-    // Track filter usage (what filters user applies)
-    async function trackFilterUsage(filters) {
-        const userId = getCurrentUserId();
-        try {
-            await fetch(`${SUPABASE_URL}/rest/v1/filter_usage`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    user_id: userId,
-                    filters_applied: filters,
-                    applied_at: new Date().toISOString()
-                })
-            });
-        } catch (error) {
-            console.log('Filter tracking saved locally');
-        }
     }
     
     // Get user's order history from Supabase
@@ -131,28 +81,10 @@
         }
     }
     
-    // Get user's recently viewed products
-    async function getRecentlyViewed() {
-        const userId = getCurrentUserId();
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/product_views?user_id=eq.${userId}&select=*&order=viewed_at.desc&limit=10`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            return await response.json();
-        } catch (error) {
-            // Fallback to localStorage
-            return JSON.parse(localStorage.getItem('product_views_fallback') || '[]').slice(-10).reverse();
-        }
-    }
-    
     // Display user history modal
     async function showUserHistoryModal() {
         const orders = await getUserOrderHistory();
         const cartItems = await getUserCartItems();
-        const recentViews = await getRecentlyViewed();
         
         let modal = document.getElementById('userHistoryModal');
         if (!modal) {
@@ -167,7 +99,6 @@
                     <div class="history-tabs">
                         <button class="history-tab active" data-tab="orders">🛒 Orders (${orders.length})</button>
                         <button class="history-tab" data-tab="cart">🛍️ Cart Items (${cartItems.length})</button>
-                        <button class="history-tab" data-tab="views">👁️ Recent Views (${recentViews.length})</button>
                     </div>
                     
                     <div id="ordersTab" class="history-tab-content active">
@@ -175,9 +106,6 @@
                     </div>
                     <div id="cartTab" class="history-tab-content">
                         <div id="cartList">Loading...</div>
-                    </div>
-                    <div id="viewsTab" class="history-tab-content">
-                        <div id="viewsList">Loading...</div>
                     </div>
                 </div>
             `;
@@ -240,22 +168,6 @@
                 </div>
             `).join('');
         }
-        
-        // Populate recent views
-        const viewsList = document.getElementById('viewsList');
-        if (recentViews.length === 0) {
-            viewsList.innerHTML = '<div style="text-align:center; padding:40px;">No recently viewed products.</div>';
-        } else {
-            viewsList.innerHTML = recentViews.map(view => `
-                <div class="history-item">
-                    <div class="history-item-header">
-                        <strong>${view.product_name || view.productName}</strong>
-                        <span class="history-date">${new Date(view.viewed_at || view.timestamp).toLocaleDateString()}</span>
-                    </div>
-                    <div>Category: ${view.product_category || 'N/A'}</div>
-                </div>
-            `).join('');
-        }
     }
     
     // Add history button to header
@@ -278,24 +190,9 @@
             align-items: center;
             gap: 5px;
         `;
-        historyBtn.title = 'View your activity history (orders, cart, views)';
+        historyBtn.title = 'View your activity history (orders, cart)';
         historyBtn.onclick = showUserHistoryModal;
         headerIcons.appendChild(historyBtn);
-    }
-    
-    // Track product clicks
-    function initProductClickTracking() {
-        document.addEventListener('click', async (e) => {
-            const productCard = e.target.closest('.product-card');
-            if (productCard && !e.target.classList.contains('add-to-cart-btn') && !e.target.classList.contains('add-to-cart-filtered')) {
-                const productId = productCard.getAttribute('data-id');
-                const productTitle = productCard.querySelector('.product-title')?.innerText;
-                const productCategory = productCard.querySelector('.product-category')?.innerText;
-                if (productId && productTitle) {
-                    await trackProductView(parseInt(productId), productTitle, productCategory);
-                }
-            }
-        });
     }
     
     // Add styles for history modal
@@ -372,8 +269,7 @@
     function initHistoryTracker() {
         addHistoryStyles();
         addActivityHistoryButton();
-        initProductClickTracking();
-        console.log('✅ Activity history tracker active - all user actions tracked to Supabase!');
+        console.log('✅ Activity history tracker active - shows Orders and Cart Items only!');
     }
     
     if (document.readyState === 'loading') {
@@ -385,5 +281,4 @@
     // Export functions for use in console
     window.getUserOrderHistory = getUserOrderHistory;
     window.getUserCartItems = getUserCartItems;
-    window.getRecentlyViewed = getRecentlyViewed;
 })();
