@@ -17,13 +17,37 @@ app.use((req, res, next) => {
     next();
 });
 
-// Root endpoint - so https://seatask-api.onrender.com/ works
+// PostgreSQL connection for Render
+const pool = new Pool({
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT || 5432,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: { rejectUnauthorized: false }, // Required for Render PostgreSQL
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
+});
+
+// Test database connection on startup
+pool.connect((err, client, release) => {
+    if (err) {
+        console.error('❌ Database connection error:', err.message);
+    } else {
+        console.log('✅ Connected to PostgreSQL successfully!');
+        release();
+    }
+});
+
+// Root endpoint
 app.get('/', (req, res) => {
     res.json({
         name: 'SeaTask Newsletter API',
         version: '1.0.0',
+        status: 'running',
         endpoints: {
-            health: '/api/health',
+            health: 'GET /api/health',
             subscribe: 'POST /api/subscribe',
             subscribers: 'GET /api/subscribers',
             count: 'GET /api/subscribers/count'
@@ -32,13 +56,22 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', time: new Date().toISOString(), message: 'API is running!' });
-});
-
-// Test endpoint
-app.get('/api/test', (req, res) => {
-    res.json({ success: true, message: 'Test endpoint working' });
+app.get('/api/health', async (req, res) => {
+    // Test database connection
+    let dbStatus = 'unknown';
+    try {
+        await pool.query('SELECT NOW()');
+        dbStatus = 'connected';
+    } catch (err) {
+        dbStatus = 'disconnected';
+    }
+    
+    res.json({ 
+        status: 'ok', 
+        time: new Date().toISOString(), 
+        database: dbStatus,
+        message: 'API is running!'
+    });
 });
 
 // API endpoint to save newsletter subscription
@@ -52,31 +85,61 @@ app.post('/api/subscribe', async (req, res) => {
     }
     
     try {
-        // For now, return success without database (testing)
-        // Once database is connected, we'll save to PostgreSQL
-        res.json({ success: true, message: '✅ Thanks for subscribing! (Test mode - will save to database soon)' });
+        // Check if email already exists
+        const checkResult = await pool.query(
+            'SELECT email FROM newsletter_subscribers WHERE email = $1',
+            [email.toLowerCase()]
+        );
+        
+        if (checkResult.rows.length > 0) {
+            return res.status(200).json({ success: false, message: 'This email is already subscribed!' });
+        }
+        
+        // Insert new subscriber
+        await pool.query(
+            `INSERT INTO newsletter_subscribers (email, status, subscribed_at) 
+             VALUES ($1, 'active', NOW())`,
+            [email.toLowerCase()]
+        );
+        
+        console.log(`📧 New subscriber saved: ${email}`);
+        res.json({ success: true, message: '✅ Thanks for subscribing! Check your inbox for updates.' });
         
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error saving subscriber:', error);
         res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
     }
 });
 
-// Get subscribers endpoint (test version)
-app.get('/api/subscribers', (req, res) => {
-    res.json({ 
-        success: true, 
-        message: 'Database connection pending. Will show subscribers once PostgreSQL is connected.',
-        subscribers: []
-    });
+// Get all subscribers
+app.get('/api/subscribers', async (req, res) => {
+    try {
+        const result = await pool.query(
+            'SELECT email, subscribed_at, status FROM newsletter_subscribers ORDER BY subscribed_at DESC'
+        );
+        res.json({ success: true, count: result.rows.length, subscribers: result.rows });
+    } catch (error) {
+        console.error('Error fetching subscribers:', error);
+        res.status(500).json({ success: false, message: error.message, subscribers: [] });
+    }
 });
 
-// Simple ping endpoint
+// Get subscriber count
+app.get('/api/subscribers/count', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT COUNT(*) as count FROM newsletter_subscribers WHERE status = $1', ['active']);
+        res.json({ success: true, count: parseInt(result.rows[0].count) });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Ping endpoint
 app.get('/ping', (req, res) => {
     res.send('pong');
 });
 
-// Start server - Render provides PORT environment variable
+// Start server
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Newsletter API running on port ${PORT}`);
