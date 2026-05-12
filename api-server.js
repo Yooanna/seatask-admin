@@ -1,13 +1,24 @@
 // ========== API SERVER FOR NEWSLETTER SUBSCRIPTIONS ==========
 const express = require('express');
 const { Pool } = require('pg');
+const path = require('path');  // ADD THIS LINE
 require('dotenv').config();
 
 const app = express();
 app.use(express.json());
 
-const path = require('path');
+// Enable CORS
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(200);
+    }
+    next();
+});
 
+// ========== ADD THIS STATIC FILE SERVING SECTION ==========
 // Serve static files (HTML, CSS, JS) from current directory
 app.use(express.static(__dirname));
 
@@ -21,20 +32,15 @@ app.get('/product-detail.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'product-detail.html'));
 });
 
-// Enable CORS
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);
-    }
-    next();
+// Handle admin route
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin.html'));
 });
+// ========== END OF STATIC FILE SERVING SECTION ==========
 
 // PostgreSQL connection for Render - WITH SSL properly configured
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL, // Use DATABASE_URL for easier config
+    connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
@@ -54,8 +60,8 @@ pool.connect((err, client, release) => {
     }
 });
 
-// Root endpoint
-app.get('/', (req, res) => {
+// Root endpoint (API info)
+app.get('/api-info', (req, res) => {
     res.json({
         name: 'SeaTask Newsletter API',
         version: '1.0.0',
@@ -246,4 +252,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`📧 Health check: GET /api/health`);
     console.log(`📧 Subscribe: POST /api/subscribe`);
     console.log(`📧 Subscribers: GET /api/subscribers`);
+    console.log(`🌐 Website: http://localhost:${PORT}/`);
 });
