@@ -6,6 +6,21 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
+const path = require('path');
+
+// Serve static files (HTML, CSS, JS) from current directory
+app.use(express.static(__dirname));
+
+// Handle root route - serve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Handle product-detail.html
+app.get('/product-detail.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'product-detail.html'));
+});
+
 // Enable CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
