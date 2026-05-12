@@ -94,11 +94,11 @@ app.post('/api/subscribe', async (req, res) => {
             return res.status(200).json({ success: false, message: 'This email is already subscribed!' });
         }
         
-        // Insert new subscriber (without 'source' column)
+        // INSERT without 'source' column - matches your table structure
         await pool.query(
-            `INSERT INTO newsletter_subscribers (email, status, subscribed_at, user_id) 
-             VALUES ($1, 'active', NOW(), $2)`,
-            [email.toLowerCase(), '']
+            `INSERT INTO newsletter_subscribers (email, status, user_id) 
+             VALUES ($1, 'active', $2)`,
+            [email.toLowerCase(), 'web_subscriber']
         );
         
         console.log(`📧 New subscriber saved: ${email}`);
@@ -106,7 +106,7 @@ app.post('/api/subscribe', async (req, res) => {
         
     } catch (error) {
         console.error('Error saving subscriber:', error);
-        res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
     }
 });
 
