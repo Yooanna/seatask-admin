@@ -3,8 +3,10 @@
 // NO conflicts with existing code
 
 (function() {
-    // API endpoint for newsletter (change to your server URL)
-    const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
+    // Change this line (around line 8):
+const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
+
+
     
     // Check if enhanced footer already exists
     function isFooterEnhanced() {
@@ -21,20 +23,20 @@
         const enhancedHTML = `
             <div class="enhanced-footer">
                 <div class="footer-container">
-                    <!-- Payment Methods Section -->
+                    <!-- Payment Methods Section - Using Emojis (Always works, no lag) -->
                     <div class="footer-section payment-section">
                         <h4>Secure Payments</h4>
                         <div class="payment-methods">
                             <div class="payment-logo" data-payment="visa">
-                                <img src="https://cdn-icons-png.flaticon.com/512/349/349221.png" alt="Visa" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg'">
+                                <div class="payment-icon">💳</div>
                                 <span>Visa</span>
                             </div>
                             <div class="payment-logo" data-payment="mastercard">
-                                <img src="https://cdn-icons-png.flaticon.com/512/349/349228.png" alt="Mastercard" onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg'">
+                                <div class="payment-icon">💎</div>
                                 <span>Mastercard</span>
                             </div>
                             <div class="payment-logo" data-payment="fpx">
-                                <img src="https://www.fpx.com.my/static/media/FPXLogo.8e5a3c8a.svg" alt="FPX" onerror="this.src='https://seeklogo.com/images/F/FPX-logo-8F0F3E7D75-seeklogo.com.png'">
+                                <div class="payment-icon">🏦</div>
                                 <span>FPX</span>
                             </div>
                         </div>
@@ -256,11 +258,12 @@
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 5px;
+                gap: 8px;
                 background: rgba(255,255,255,0.1);
-                padding: 10px 15px;
+                padding: 12px 18px;
                 border-radius: 12px;
                 transition: transform 0.2s;
+                min-width: 70px;
             }
             
             .payment-logo:hover {
@@ -268,10 +271,15 @@
                 background: rgba(255,255,255,0.15);
             }
             
-            .payment-logo img {
-                width: 40px;
-                height: 40px;
-                object-fit: contain;
+            .payment-icon {
+                font-size: 32px;
+                width: 50px;
+                height: 50px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255,255,255,0.15);
+                border-radius: 50%;
             }
             
             .payment-logo span {

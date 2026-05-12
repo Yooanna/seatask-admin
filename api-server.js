@@ -6,7 +6,7 @@ require('dotenv').config();
 const app = express();
 app.use(express.json());
 
-// Enable CORS for your frontend
+// Enable CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -17,13 +17,9 @@ app.use((req, res, next) => {
     next();
 });
 
-// PostgreSQL connection for Render
+// PostgreSQL connection for Render - WITH SSL properly configured
 const pool = new Pool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
+    connectionString: process.env.DATABASE_URL, // Use DATABASE_URL for easier config
     ssl: { rejectUnauthorized: false },
     max: 20,
     idleTimeoutMillis: 30000,
@@ -37,6 +33,9 @@ pool.connect((err, client, release) => {
     } else {
         console.log('✅ Connected to PostgreSQL successfully!');
         release();
+        
+        // Create table if not exists
+        createTable();
     }
 });
 
@@ -59,18 +58,22 @@ app.get('/', (req, res) => {
 app.get('/api/health', async (req, res) => {
     let dbStatus = 'unknown';
     try {
-        await pool.query('SELECT NOW()');
+        const result = await pool.query('SELECT NOW()');
         dbStatus = 'connected';
+        res.json({ 
+            status: 'ok', 
+            time: new Date().toISOString(), 
+            database: dbStatus,
+            version: '1.0.0'
+        });
     } catch (err) {
         dbStatus = 'disconnected';
+        res.status(500).json({ 
+            status: 'error', 
+            database: dbStatus, 
+            error: err.message 
+        });
     }
-    
-    res.json({ 
-        status: 'ok', 
-        time: new Date().toISOString(), 
-        database: dbStatus,
-        message: 'API is running!'
-    });
 });
 
 // API endpoint to save newsletter subscription
@@ -84,6 +87,16 @@ app.post('/api/subscribe', async (req, res) => {
     }
     
     try {
+        // First, check if table exists and what columns are available
+        const tableCheck = await pool.query(`
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'newsletter_subscribers'
+        `);
+        
+        const existingColumns = tableCheck.rows.map(row => row.column_name);
+        console.log('Existing columns:', existingColumns);
+        
         // Check if email already exists
         const checkResult = await pool.query(
             'SELECT email FROM newsletter_subscribers WHERE email = $1',
@@ -94,19 +107,44 @@ app.post('/api/subscribe', async (req, res) => {
             return res.status(200).json({ success: false, message: 'This email is already subscribed!' });
         }
         
-        // INSERT without 'source' column - matches your table structure
-        await pool.query(
-            `INSERT INTO newsletter_subscribers (email, status, user_id) 
-             VALUES ($1, 'active', $2)`,
-            [email.toLowerCase(), 'web_subscriber']
-        );
+        // Build dynamic INSERT based on existing columns
+        let insertQuery = 'INSERT INTO newsletter_subscribers (email';
+        let values = [email.toLowerCase()];
+        let valuePlaceholders = '$1';
+        let paramCount = 2;
+        
+        // Add status if column exists
+        if (existingColumns.includes('status')) {
+            insertQuery += ', status';
+            values.push('active');
+            valuePlaceholders += `, $${paramCount}`;
+            paramCount++;
+        }
+        
+        // Add subscribed_at if column exists
+        if (existingColumns.includes('subscribed_at')) {
+            insertQuery += ', subscribed_at';
+            values.push(new Date().toISOString());
+            valuePlaceholders += `, $${paramCount}`;
+            paramCount++;
+        }
+        
+        insertQuery += ') VALUES (' + valuePlaceholders + ')';
+        
+        console.log('Insert query:', insertQuery);
+        
+        await pool.query(insertQuery, values);
         
         console.log(`📧 New subscriber saved: ${email}`);
         res.json({ success: true, message: '✅ Thanks for subscribing! Check your inbox for updates.' });
         
     } catch (error) {
         console.error('Error saving subscriber:', error);
-        res.status(500).json({ success: false, message: 'Server error: ' + error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Server error: ' + error.message,
+            details: error.detail || 'Please check database schema'
+        });
     }
 });
 
@@ -137,6 +175,54 @@ app.get('/api/subscribers/count', async (req, res) => {
 app.get('/ping', (req, res) => {
     res.send('pong');
 });
+
+// Auto-create table on startup
+async function createTable() {
+    try {
+        // Check if table exists
+        const tableCheck = await pool.query(`
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_name = 'newsletter_subscribers'
+            )
+        `);
+        
+        if (!tableCheck.rows[0].exists) {
+            console.log('Creating newsletter_subscribers table...');
+            await pool.query(`
+                CREATE TABLE newsletter_subscribers (
+                    id SERIAL PRIMARY KEY,
+                    email VARCHAR(255) UNIQUE NOT NULL,
+                    status VARCHAR(50) DEFAULT 'active',
+                    subscribed_at TIMESTAMP DEFAULT NOW()
+                )
+            `);
+            console.log('✅ Table created successfully');
+        } else {
+            console.log('✅ Table already exists');
+            
+            // Check and add missing columns
+            const columns = await pool.query(`
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'newsletter_subscribers'
+            `);
+            
+            const colNames = columns.rows.map(r => r.column_name);
+            
+            if (!colNames.includes('subscribed_at')) {
+                await pool.query('ALTER TABLE newsletter_subscribers ADD COLUMN subscribed_at TIMESTAMP DEFAULT NOW()');
+                console.log('✅ Added subscribed_at column');
+            }
+            if (!colNames.includes('status')) {
+                await pool.query("ALTER TABLE newsletter_subscribers ADD COLUMN status VARCHAR(50) DEFAULT 'active'");
+                console.log('✅ Added status column');
+            }
+        }
+    } catch (err) {
+        console.error('❌ Table creation error:', err.message);
+    }
+}
 
 // Start server
 const PORT = process.env.PORT || 3002;
