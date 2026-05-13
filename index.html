@@ -133,6 +133,8 @@
         const saved = localStorage.getItem(CART_KEY);
         if (saved) {
             cart = JSON.parse(saved);
+        } else {
+            cart = [];
         }
         updateCartDisplay();
         console.log('Cart loaded:', cart.length, 'items');
@@ -141,8 +143,6 @@
     function saveCart() {
         localStorage.setItem(CART_KEY, JSON.stringify(cart));
         updateCartDisplay();
-        // Also trigger any cart refresh listeners
-        if (window.onCartUpdate) window.onCartUpdate();
     }
     
     function updateCartDisplay() {
@@ -173,11 +173,16 @@
         return cart;
     };
     
-    window.showMyCart = function() {
+    // Refresh cart modal - always reads fresh cart data
+    window.refreshCartModal = function() {
         const cartItemsDiv = document.getElementById('cartItems');
         const cartTotalSpan = document.getElementById('cartTotal');
-        const cartModal = document.getElementById('cartModal');
+        
         if (!cartItemsDiv) return;
+        
+        // Reload cart from storage to ensure fresh data
+        const saved = localStorage.getItem(CART_KEY);
+        cart = saved ? JSON.parse(saved) : [];
         
         if (cart.length === 0) {
             cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Your cart is empty. 🛒</p>';
@@ -210,16 +215,27 @@
                     e.stopPropagation();
                     const idx = parseInt(btn.dataset.idx);
                     const action = btn.dataset.action;
-                    if (action === 'incr') cart[idx].quantity++;
-                    else if (action === 'decr') {
-                        if (cart[idx].quantity > 1) cart[idx].quantity--;
-                        else cart.splice(idx, 1);
-                    } else if (action === 'remove') cart.splice(idx, 1);
+                    if (action === 'incr') {
+                        cart[idx].quantity++;
+                    } else if (action === 'decr') {
+                        if (cart[idx].quantity > 1) {
+                            cart[idx].quantity--;
+                        } else {
+                            cart.splice(idx, 1);
+                        }
+                    } else if (action === 'remove') {
+                        cart.splice(idx, 1);
+                    }
                     saveCart();
-                    window.showMyCart();
+                    window.refreshCartModal();
                 });
             });
         }
+    };
+    
+    window.showMyCart = function() {
+        window.refreshCartModal();
+        const cartModal = document.getElementById('cartModal');
         if (cartModal) cartModal.style.display = 'flex';
     };
     
@@ -376,7 +392,7 @@
 })();
 </script>
 
-<!-- ========== FINAL CHECKOUT HANDLER (CLEARS CART + SAVES ORDER) ========== -->
+<!-- ========== FINAL CHECKOUT HANDLER (REFRESHES CART MODAL AFTER ORDER) ========== -->
 <script>
 (function() {
     const checkoutForm = document.getElementById('checkoutForm');
@@ -438,25 +454,31 @@
         localStorage.removeItem('seatask_simple_cart');
         localStorage.removeItem('cart');
         
-        // Show success
+        // Show success message
         alert(`✅ ORDER PLACED SUCCESSFULLY!\n\nOrder #: ${orderNumber}\nTotal: RM ${totalAmount.toFixed(2)}\n\nThank you ${fullName}!\n\nA confirmation email has been sent to ${email}`);
         
-        // Close modals
+        // Close checkout modal
         const checkoutModal = document.getElementById('checkoutModal');
         if (checkoutModal) checkoutModal.style.display = 'none';
+        
+        // Close cart modal if open
         const cartModal = document.getElementById('cartModal');
-        if (cartModal && cartModal.style.display === 'flex') cartModal.style.display = 'none';
+        if (cartModal && cartModal.style.display === 'flex') {
+            cartModal.style.display = 'none';
+        }
         
         // Reset form
         finalForm.reset();
         
-        // Refresh the cart display (to show empty cart)
-        if (typeof window.showMyCart === 'function') window.showMyCart();
+        // IMPORTANT: Refresh the cart modal data so it shows empty next time
+        if (typeof window.refreshCartModal === 'function') {
+            window.refreshCartModal();
+        }
         
         console.log('✅ Order completed and cart cleared');
     });
     
-    console.log('✅ Master checkout handler ready - cart will clear after order');
+    console.log('✅ Master checkout handler ready - cart will clear and modal will refresh after order');
 })();
 </script>
 
