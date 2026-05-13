@@ -464,5 +464,93 @@
 })();
 </script>
 
+<!-- ========== FIX CHECKOUT TO SAVE ORDER HISTORY ========== -->
+<script>
+(function() {
+    // Function to save order to history
+    function saveOrderToHistory(orderData) {
+        const orderHistory = JSON.parse(localStorage.getItem('order_history') || '[]');
+        orderHistory.unshift({
+            order_number: orderData.order_number,
+            date: new Date().toISOString(),
+            total: orderData.total_amount,
+            status: 'completed',
+            order_items: orderData.order_items
+        });
+        localStorage.setItem('order_history', JSON.stringify(orderHistory.slice(0, 20)));
+        console.log('✅ Order saved to history:', orderData.order_number);
+    }
+    
+    // Hook into checkout form
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        // Remove any existing listeners
+        const newForm = checkoutForm.cloneNode(true);
+        checkoutForm.parentNode.replaceChild(newForm, checkoutForm);
+        
+        newForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Get cart from working cart system
+            const CART_KEY = 'my_simple_cart';
+            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+            
+            if (cart.length === 0) {
+                alert('Cart is empty!');
+                return;
+            }
+            
+            // Calculate total
+            const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const orderNumber = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            const fullName = document.querySelector('[name="fullName"]')?.value || 'Guest';
+            
+            // Save order to history
+            saveOrderToHistory({
+                order_number: orderNumber,
+                total_amount: totalAmount,
+                order_items: cart.map(item => ({
+                    product_name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                }))
+            });
+            
+            // Clear cart
+            localStorage.setItem(CART_KEY, JSON.stringify([]));
+            
+            // Update cart count display
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) cartCount.innerText = '0';
+            
+            // Show success message
+            alert(`✅ Order placed successfully!\nOrder #: ${orderNumber}\nTotal: RM ${totalAmount.toFixed(2)}\n\nThank you ${fullName} for shopping at SeaTask!`);
+            
+            // Close modals
+            const checkoutModal = document.getElementById('checkoutModal');
+            if (checkoutModal) checkoutModal.style.display = 'none';
+            
+            const cartModal = document.getElementById('cartModal');
+            if (cartModal && cartModal.style.display === 'flex') {
+                cartModal.style.display = 'none';
+            }
+            
+            // Reset form
+            newForm.reset();
+            
+            // Refresh cart modal if open
+            if (typeof window.showCart === 'function') {
+                window.showCart();
+            }
+            if (typeof window.showMyCart === 'function') {
+                window.showMyCart();
+            }
+        });
+        
+        console.log('✅ Checkout form now saves orders to history');
+    }
+})();
+</script>
+
 </body>
 </html>
