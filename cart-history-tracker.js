@@ -1,7 +1,5 @@
 // ========== USER CART & ORDER HISTORY TRACKER ==========
-// Tracks all user selections, cart items, and order history in Supabase
-// NO localStorage for persistent data
-// UPDATED: Removed Recent Views tab - only Orders and Cart Items
+// UPDATED: Reads from working cart system and localStorage orders
 
 (function() {
     const SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
@@ -35,8 +33,17 @@
         return userId;
     }
     
-    // Get user's order history from Supabase
+    // Get user's order history from localStorage (since Supabase may not have orders)
     async function getUserOrderHistory() {
+        // First try to get from localStorage
+        const localOrders = JSON.parse(localStorage.getItem('order_history') || '[]');
+        
+        if (localOrders.length > 0) {
+            console.log('Orders from localStorage:', localOrders.length);
+            return localOrders;
+        }
+        
+        // Fallback to Supabase if no localStorage orders
         const userId = getCurrentUserId();
         try {
             const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?user_id=eq.${userId}&select=*&order=created_at.desc`, {
@@ -59,26 +66,20 @@
             }
             return orders;
         } catch (error) {
-            console.error('Error fetching order history:', error);
+            console.error('Error fetching orders from Supabase:', error);
             return [];
         }
     }
     
-    // Get user's cart items from Supabase
+    // Get user's cart items from WORKING CART SYSTEM (not Supabase)
     async function getUserCartItems() {
-        const userId = getCurrentUserId();
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/cart_items?user_id=eq.${userId}&select=*`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching cart:', error);
-            return [];
-        }
+        // Read from the working cart system (same as main page)
+        const CART_KEY = 'my_simple_cart';
+        const savedCart = localStorage.getItem(CART_KEY);
+        const cartItems = savedCart ? JSON.parse(savedCart) : [];
+        
+        console.log('Cart items from working cart:', cartItems.length);
+        return cartItems;
     }
     
     // Display user history modal
@@ -140,19 +141,19 @@
             ordersList.innerHTML = orders.map(order => `
                 <div class="history-item">
                     <div class="history-item-header">
-                        <strong>Order #${order.order_number}</strong>
-                        <span class="history-date">${new Date(order.created_at).toLocaleDateString()}</span>
+                        <strong>${order.order_number || 'Order'}</strong>
+                        <span class="history-date">${new Date(order.date || order.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div>Total: RM ${order.total_amount.toFixed(2)}</div>
-                    <div>Status: <span class="order-status">${order.status}</span></div>
+                    <div>Total: RM ${(order.total || order.total_amount || 0).toFixed(2)}</div>
+                    <div>Status: <span class="order-status">${order.status || 'completed'}</span></div>
                     <div class="history-item-products">
-                        ${order.items ? order.items.map(item => `<div>• ${item.product_name} × ${item.quantity}</div>`).join('') : ''}
+                        ${order.order_items ? order.order_items.map(item => `<div>• ${item.product_name} × ${item.quantity}</div>`).join('') : ''}
                     </div>
                 </div>
             `).join('');
         }
         
-        // Populate cart items
+        // Populate cart items from WORKING CART
         const cartList = document.getElementById('cartList');
         if (cartItems.length === 0) {
             cartList.innerHTML = '<div style="text-align:center; padding:40px;">Your cart is empty.</div>';
@@ -160,11 +161,11 @@
             cartList.innerHTML = cartItems.map(item => `
                 <div class="history-item">
                     <div class="history-item-header">
-                        <strong>${item.product_name}</strong>
+                        <strong>${item.name}</strong>
                         <span>RM ${item.price.toFixed(2)}</span>
                     </div>
                     <div>Quantity: ${item.quantity}</div>
-                    <div>Added: ${new Date(item.created_at || Date.now()).toLocaleDateString()}</div>
+                    <div>Added: ${new Date(item.addedAt || Date.now()).toLocaleDateString()}</div>
                 </div>
             `).join('');
         }
@@ -265,11 +266,60 @@
         document.head.appendChild(style);
     }
     
+    // Save order to history when checkout is completed
+    function saveOrderToHistory(orderData) {
+        const orderHistory = JSON.parse(localStorage.getItem('order_history') || '[]');
+        orderHistory.unshift({
+            order_number: orderData.order_number,
+            date: new Date().toISOString(),
+            total: orderData.total_amount,
+            status: 'completed',
+            order_items: orderData.order_items
+        });
+        // Keep only last 20 orders
+        localStorage.setItem('order_history', JSON.stringify(orderHistory.slice(0, 20)));
+    }
+    
+    // Hook into checkout form to save orders
+    function hookCheckoutForOrderHistory() {
+        const checkoutForm = document.getElementById('checkoutForm');
+        if (!checkoutForm) {
+            setTimeout(hookCheckoutForOrderHistory, 500);
+            return;
+        }
+        
+        const originalSubmit = checkoutForm.onsubmit;
+        checkoutForm.addEventListener('submit', function(e) {
+            // Get cart items before they are cleared
+            const CART_KEY = 'my_simple_cart';
+            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+            
+            if (cart.length > 0) {
+                const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                const orderNumber = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                const fullName = document.querySelector('[name="fullName"]')?.value || 'Guest';
+                
+                saveOrderToHistory({
+                    order_number: orderNumber,
+                    total_amount: totalAmount,
+                    order_items: cart.map(item => ({
+                        product_name: item.name,
+                        quantity: item.quantity,
+                        price: item.price
+                    }))
+                });
+                
+                console.log('✅ Order saved to history:', orderNumber);
+            }
+        });
+    }
+    
     // Initialize
     function initHistoryTracker() {
         addHistoryStyles();
         addActivityHistoryButton();
-        console.log('✅ Activity history tracker active - shows Orders and Cart Items only!');
+        hookCheckoutForOrderHistory();
+        console.log('✅ Activity history tracker active - reads from working cart and localStorage orders!');
     }
     
     if (document.readyState === 'loading') {
