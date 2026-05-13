@@ -491,368 +491,320 @@ const products = [
 { id: 12, name: "Professional Badminton Net", category: "Badminton", price: 89.00, rating: 4.8, reviewCount: 167, image: "https://myoutdoorsports.co.uk/wp-content/uploads/2022/04/buy-badminton-net-online.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Polyethylene + Steel Cable", description: "Regulation-size badminton net with steel cable.", care: "Store dry. Clean with soft brush." }
 ];
 
-// CART FUNCTIONS
-let cart = JSON.parse(localStorage.getItem('cart')) || [];
-
-function saveCart() {
-localStorage.setItem('cart', JSON.stringify(cart));
-updateCartCount();
-updateCartTotal();
-}
-
-function updateCartCount() {
-const total = cart.reduce((sum, item) => sum + item.quantity, 0);
-const countSpan = document.getElementById('cartCount');
-if (countSpan) countSpan.innerText = total;
-}
-
-function updateCartTotal() {
-const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-const cartTotalSpan = document.getElementById('cartTotal');
-if (cartTotalSpan) cartTotalSpan.innerText = totalPrice.toFixed(2);
-}
-
-function renderCartModal() {
-const cartItemsDiv = document.getElementById('cartItems');
-if (!cartItemsDiv) return;
-
-if (cart.length === 0) {
-cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Your cart is empty. 🛒</p>';
-return;
-}
-
-cartItemsDiv.innerHTML = '';
-cart.forEach((item, index) => {
-const itemDiv = document.createElement('div');
-itemDiv.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e0eef5;';
-itemDiv.innerHTML = `
-<div style="flex:1;">
-<div style="font-weight: 500;">${item.name}</div>
-<div style="font-size: 13px; color: #1976a5;">RM ${item.price.toFixed(2)} each</div>
-${item.variation ? `<div style="font-size: 11px; color: #7a8e9c;">${item.variation.color ? `Color: ${item.variation.color}` : ''} ${item.variation.size ? `Size: ${item.variation.size}` : ''}</div>` : ''}
-</div>
-<div style="display: flex; align-items: center; gap: 10px;">
-<button class="qty-btn" data-index="${index}" data-action="decr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">-</button>
-<span>${item.quantity}</span>
-<button class="qty-btn" data-index="${index}" data-action="incr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">+</button>
-<button class="qty-btn" data-index="${index}" data-action="remove" style="background:#ff6b6b; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; color:white;">🗑</button>
-</div>
-`;
-cartItemsDiv.appendChild(itemDiv);
-});
-
-document.querySelectorAll('.qty-btn').forEach(btn => {
-btn.addEventListener('click', (e) => {
-e.stopPropagation();
-const idx = parseInt(btn.dataset.index);
-const action = btn.dataset.action;
-
-if (action === 'incr') {
-cart[idx].quantity++;
-} else if (action === 'decr') {
-cart[idx].quantity--;
-if (cart[idx].quantity <= 0) cart.splice(idx, 1);
-} else if (action === 'remove') {
-cart.splice(idx, 1);
-}
-saveCart();
-renderCartModal();
-updateCartTotal();
-});
-});
-updateCartTotal();
-}
-
-function addToCart(productId, quantity = 1, variation = null) {
-const product = products.find(p => p.id === productId);
-if (!product) return;
-
-const existing = cart.find(item => item.id === productId && JSON.stringify(item.variation) === JSON.stringify(variation));
-if (existing) {
-existing.quantity += quantity;
-} else {
-cart.push({ id: product.id, name: product.name, price: product.price, quantity: quantity, variation: variation });
-}
-saveCart();
-
-const toast = document.getElementById('toast');
-if (toast) {
-toast.innerText = `${product.name} added to cart!`;
-toast.style.opacity = '1';
-toast.style.visibility = 'visible';
-setTimeout(() => {
-toast.style.opacity = '0';
-toast.style.visibility = 'hidden';
-}, 2000);
-} else {
-alert(`${product.name} added to cart!`);
-}
-}
+// WORKING CART SYSTEM - Same as index.html
+(function() {
+    const WORKING_CART_KEY = 'seatask_working_cart';
+    
+    function loadCart() {
+        const saved = localStorage.getItem(WORKING_CART_KEY);
+        return saved ? JSON.parse(saved) : [];
+    }
+    
+    function saveCart(cart) {
+        localStorage.setItem(WORKING_CART_KEY, JSON.stringify(cart));
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const cartCount = document.getElementById('cartCount');
+        if (cartCount) cartCount.innerText = total;
+    }
+    
+    // OVERRIDE addToCart function
+    window.addToCart = function(productId, quantity = 1, variation = null) {
+        const product = products.find(p => p.id === productId);
+        if (product) {
+            let cart = loadCart();
+            const existing = cart.find(item => item.id === productId);
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    quantity: quantity
+                });
+            }
+            saveCart(cart);
+            
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.innerText = `${product.name} added to cart! 🛒`;
+                toast.style.opacity = '1';
+                toast.style.visibility = 'visible';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.visibility = 'hidden';
+                }, 2000);
+            }
+        }
+    };
+    
+    // Update cart count on page load
+    const cart = loadCart();
+    const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+    const cartCount = document.getElementById('cartCount');
+    if (cartCount) cartCount.innerText = total;
+})();
 
 function getRecommendations(currentProduct) {
-let sameCategory = products.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
-if (sameCategory.length < 4) {
-const priceRange = products.filter(p => p.id !== currentProduct.id && p.category !== currentProduct.category && Math.abs(p.price - currentProduct.price) < 50);
-sameCategory = [...sameCategory, ...priceRange];
-}
-return sameCategory.slice(0, 4);
+    let sameCategory = products.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
+    if (sameCategory.length < 4) {
+        const priceRange = products.filter(p => p.id !== currentProduct.id && p.category !== currentProduct.category && Math.abs(p.price - currentProduct.price) < 50);
+        sameCategory = [...sameCategory, ...priceRange];
+    }
+    return sameCategory.slice(0, 4);
 }
 
 function renderRecommendations(currentProduct) {
-const recommendations = getRecommendations(currentProduct);
-if (recommendations.length === 0) return '';
-return `
-<div class="recommendations-section">
-<div class="recommendations-title">✨ You May Also Like</div>
-<div class="recommendations-grid">
-${recommendations.map(rec => `
-<a href="product-detail.html?id=${rec.id}" class="rec-product-card">
-<img class="rec-product-img" src="${rec.image}" alt="${rec.name}">
-<div class="rec-product-info">
-<div class="rec-product-name">${rec.name}</div>
-<div class="rec-product-price">RM ${rec.price.toFixed(2)}</div>
-<div class="rec-product-rating">⭐ ${rec.rating}/5</div>
-</div>
-</a>
-`).join('')}
-</div>
-</div>
-`;
+    const recommendations = getRecommendations(currentProduct);
+    if (recommendations.length === 0) return '';
+    return `
+        <div class="recommendations-section">
+            <div class="recommendations-title">✨ You May Also Like</div>
+            <div class="recommendations-grid">
+                ${recommendations.map(rec => `
+                    <a href="product-detail.html?id=${rec.id}" class="rec-product-card">
+                        <img class="rec-product-img" src="${rec.image}" alt="${rec.name}">
+                        <div class="rec-product-info">
+                            <div class="rec-product-name">${rec.name}</div>
+                            <div class="rec-product-price">RM ${rec.price.toFixed(2)}</div>
+                            <div class="rec-product-rating">⭐ ${rec.rating}/5</div>
+                        </div>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    `;
 }
 
 function loadProductDetail() {
-const urlParams = new URLSearchParams(window.location.search);
-const productId = parseInt(urlParams.get('id'));
-const product = products.find(p => p.id === productId);
-
-if (!product) {
-document.getElementById('detailContent').innerHTML = '<p>Product not found.</p>';
-return;
-}
-
-let variationsHtml = '';
-if (product.colors && product.colors.length > 0) {
-variationsHtml += `
-<div class="variation-label">🎨 Color:</div>
-<div class="variation-options" id="colorOptions">
-${product.colors.map((color, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>`).join('')}
-</div>
-`;
-}
-if (product.sizes && product.sizes.length > 0) {
-variationsHtml += `
-<div class="variation-label" style="margin-top:15px;">📏 Size:</div>
-<div class="variation-options" id="sizeOptions">
-${product.sizes.map((size, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>`).join('')}
-</div>
-`;
-}
-
-const sampleReviews = [
-{ name: "Ahmad F.", rating: 5, date: "2 days ago", text: "Excellent quality! Fast delivery and well packaged." },
-{ name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase." },
-{ name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price." }
-];
-
-const reviewsHtml = sampleReviews.map(review => `
-<div class="review-card">
-<div class="reviewer-name">${review.name}</div>
-<div class="review-rating">${'⭐'.repeat(review.rating)} ${review.rating}/5</div>
-<div class="review-date">${review.date}</div>
-<div class="review-text">${review.text}</div>
-</div>
-`).join('');
-
-const recommendationsHtml = renderRecommendations(product);
-
-const html = `
-<div class="product-detail-main">
-<div class="product-detail-gallery">
-<div class="image-wrapper">
-<img src="${product.image}" alt="${product.name}" id="mainProductImage">
-</div>
-</div>
-<div class="product-detail-info">
-<div class="product-detail-title">${product.name}</div>
-<div class="product-detail-brand">Brand: ${product.brand || 'SeaTask Original'}</div>
-<div class="product-detail-rating">
-<div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}/5</div>
-<div class="rating-count">${product.reviewCount || 0} Ratings</div>
-</div>
-<div class="product-detail-price">
-<span class="current-price">RM ${product.price.toFixed(2)}</span>
-<span class="original-price">RM ${(product.price * 1.5).toFixed(2)}</span>
-<span class="discount">-${Math.round((1 - product.price/(product.price*1.5)) * 100)}%</span>
-</div>
-
-<div class="product-variations">
-${variationsHtml}
-</div>
-
-<div class="quantity-selector">
-<button class="quantity-btn" id="decrQty">-</button>
-<span class="quantity-value" id="qtyValue">1</span>
-<button class="quantity-btn" id="incrQty">+</button>
-</div>
-
-<button class="add-to-cart-detail" id="addToCartBtn">Add to Cart</button>
-
-<div class="seller-info">
-<div>🏪 <span class="seller-name">SeaTask Official Store</span></div>
-<div>⭐ 98% Positive Ratings • Preferred Seller</div>
-</div>
-
-<div class="delivery-info">
-<div class="delivery-row"><span>🚚 Delivery:</span><span>Kuala Lumpur</span></div>
-<div class="delivery-row"><span>📅 Estimated Delivery:</span><span>${new Date(Date.now() + 3*24*60*60*1000).toLocaleDateString()} - ${new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString()}</span></div>
-</div>
-
-<div class="warranty-info">
-✅ Authentic • 30 Days Free Return • 2 Year Warranty
-</div>
-
-<div class="details-description">
-<strong>📝 Description:</strong><br>
-${product.description}
-<br><br>
-<strong>🧵 Material:</strong> ${product.material || 'Premium Quality'}<br>
-<strong>📍 Origin:</strong> ${product.origin || 'Made in Malaysia'}<br>
-<strong>🧼 Care:</strong> ${product.care || 'Standard care instructions.'}
-</div>
-</div>
-</div>
-
-${recommendationsHtml}
-
-<div class="reviews-section">
-<h3>Customer Reviews (${product.reviewCount || 0})</h3>
-${reviewsHtml}
-</div>
-`;
-
-document.getElementById('detailContent').innerHTML = html;
-
-let qty = 1;
-document.getElementById('incrQty')?.addEventListener('click', () => { qty++; document.getElementById('qtyValue').innerText = qty; });
-document.getElementById('decrQty')?.addEventListener('click', () => { if (qty > 1) qty--; document.getElementById('qtyValue').innerText = qty; });
-
-document.getElementById('addToCartBtn')?.addEventListener('click', () => {
-const selectedColor = document.querySelector('[data-type="color"].active')?.getAttribute('data-value') || null;
-const selectedSize = document.querySelector('[data-type="size"].active')?.getAttribute('data-value') || null;
-addToCart(product.id, qty, { color: selectedColor, size: selectedSize });
-});
-
-document.querySelectorAll('.variation-btn').forEach(btn => {
-btn.addEventListener('click', function() {
-const parent = this.parentElement;
-parent.querySelectorAll('.variation-btn').forEach(b => b.classList.remove('active'));
-this.classList.add('active');
-});
-});
-
-if (typeof addAngleDots === 'function') {
-setTimeout(() => addAngleDots(), 100);
-}
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = parseInt(urlParams.get('id'));
+    const product = products.find(p => p.id === productId);
+    
+    if (!product) {
+        document.getElementById('detailContent').innerHTML = '<p>Product not found.</p>';
+        return;
+    }
+    
+    let variationsHtml = '';
+    if (product.colors && product.colors.length > 0) {
+        variationsHtml += `
+            <div class="variation-label">🎨 Color:</div>
+            <div class="variation-options" id="colorOptions">
+                ${product.colors.map((color, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>`).join('')}
+            </div>
+        `;
+    }
+    if (product.sizes && product.sizes.length > 0) {
+        variationsHtml += `
+            <div class="variation-label" style="margin-top:15px;">📏 Size:</div>
+            <div class="variation-options" id="sizeOptions">
+                ${product.sizes.map((size, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>`).join('')}
+            </div>
+        `;
+    }
+    
+    const sampleReviews = [
+        { name: "Ahmad F.", rating: 5, date: "2 days ago", text: "Excellent quality! Fast delivery and well packaged." },
+        { name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase." },
+        { name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price." }
+    ];
+    
+    const reviewsHtml = sampleReviews.map(review => `
+        <div class="review-card">
+            <div class="reviewer-name">${review.name}</div>
+            <div class="review-rating">${'⭐'.repeat(review.rating)} ${review.rating}/5</div>
+            <div class="review-date">${review.date}</div>
+            <div class="review-text">${review.text}</div>
+        </div>
+    `).join('');
+    
+    const recommendationsHtml = renderRecommendations(product);
+    
+    const html = `
+        <div class="product-detail-main">
+            <div class="product-detail-gallery">
+                <div class="image-wrapper">
+                    <img src="${product.image}" alt="${product.name}" id="mainProductImage">
+                </div>
+            </div>
+            <div class="product-detail-info">
+                <div class="product-detail-title">${product.name}</div>
+                <div class="product-detail-brand">Brand: ${product.brand || 'SeaTask Original'}</div>
+                <div class="product-detail-rating">
+                    <div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}/5</div>
+                    <div class="rating-count">${product.reviewCount || 0} Ratings</div>
+                </div>
+                <div class="product-detail-price">
+                    <span class="current-price">RM ${product.price.toFixed(2)}</span>
+                    <span class="original-price">RM ${(product.price * 1.5).toFixed(2)}</span>
+                    <span class="discount">-${Math.round((1 - product.price/(product.price*1.5)) * 100)}%</span>
+                </div>
+                
+                <div class="product-variations">
+                    ${variationsHtml}
+                </div>
+                
+                <div class="quantity-selector">
+                    <button class="quantity-btn" id="decrQty">-</button>
+                    <span class="quantity-value" id="qtyValue">1</span>
+                    <button class="quantity-btn" id="incrQty">+</button>
+                </div>
+                
+                <button class="add-to-cart-detail" id="addToCartBtn">Add to Cart</button>
+                
+                <div class="seller-info">
+                    <div>🏪 <span class="seller-name">SeaTask Official Store</span></div>
+                    <div>⭐ 98% Positive Ratings • Preferred Seller</div>
+                </div>
+                
+                <div class="delivery-info">
+                    <div class="delivery-row"><span>🚚 Delivery:</span><span>Kuala Lumpur</span></div>
+                    <div class="delivery-row"><span>📅 Estimated Delivery:</span><span>${new Date(Date.now() + 3*24*60*60*1000).toLocaleDateString()} - ${new Date(Date.now() + 5*24*60*60*1000).toLocaleDateString()}</span></div>
+                </div>
+                
+                <div class="warranty-info">
+                    ✅ Authentic • 30 Days Free Return • 2 Year Warranty
+                </div>
+                
+                <div class="details-description">
+                    <strong>📝 Description:</strong><br>
+                    ${product.description}
+                    <br><br>
+                    <strong>🧵 Material:</strong> ${product.material || 'Premium Quality'}<br>
+                    <strong>📍 Origin:</strong> ${product.origin || 'Made in Malaysia'}<br>
+                    <strong>🧼 Care:</strong> ${product.care || 'Standard care instructions.'}
+                </div>
+            </div>
+        </div>
+        
+        ${recommendationsHtml}
+        
+        <div class="reviews-section">
+            <h3>Customer Reviews (${product.reviewCount || 0})</h3>
+            ${reviewsHtml}
+        </div>
+    `;
+    
+    document.getElementById('detailContent').innerHTML = html;
+    
+    let qty = 1;
+    document.getElementById('incrQty')?.addEventListener('click', () => { qty++; document.getElementById('qtyValue').innerText = qty; });
+    document.getElementById('decrQty')?.addEventListener('click', () => { if (qty > 1) qty--; document.getElementById('qtyValue').innerText = qty; });
+    
+    document.getElementById('addToCartBtn')?.addEventListener('click', () => {
+        const selectedColor = document.querySelector('[data-type="color"].active')?.getAttribute('data-value') || null;
+        const selectedSize = document.querySelector('[data-type="size"].active')?.getAttribute('data-value') || null;
+        window.addToCart(product.id, qty, { color: selectedColor, size: selectedSize });
+    });
+    
+    document.querySelectorAll('.variation-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const parent = this.parentElement;
+            parent.querySelectorAll('.variation-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    if (typeof addAngleDots === 'function') {
+        setTimeout(() => addAngleDots(), 100);
+    }
 }
 
 function initModals() {
-const cartModal = document.getElementById('cartModal');
-const checkoutModal = document.getElementById('checkoutModal');
-const cartIcon = document.getElementById('cartIcon');
-
-if (cartIcon) {
-cartIcon.addEventListener('click', () => {
-renderCartModal();
-if (cartModal) cartModal.style.display = 'flex';
-});
+    const cartModal = document.getElementById('cartModal');
+    const checkoutModal = document.getElementById('checkoutModal');
+    const cartIcon = document.getElementById('cartIcon');
+    
+    if (cartIcon) {
+        cartIcon.addEventListener('click', () => {
+            if (cartModal) cartModal.style.display = 'flex';
+        });
+    }
+    
+    const closeBtn = document.querySelector('#cartModal .close');
+    const closeCheckout = document.querySelector('#checkoutModal .close-checkout');
+    const continueBtn = document.getElementById('continueShoppingBtn');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    
+    if (closeBtn) closeBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
+    if (closeCheckout) closeCheckout.addEventListener('click', () => { if (checkoutModal) checkoutModal.style.display = 'none'; });
+    if (continueBtn) continueBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
+    
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', () => {
+            const cart = JSON.parse(localStorage.getItem('seatask_working_cart') || '[]');
+            if (cart.length === 0) {
+                const toast = document.getElementById('toast');
+                if (toast) {
+                    toast.innerText = 'Cart is empty! Add items first.';
+                    toast.style.opacity = '1';
+                    toast.style.visibility = 'visible';
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        toast.style.visibility = 'hidden';
+                    }, 2000);
+                }
+                return;
+            }
+            if (cartModal) cartModal.style.display = 'none';
+            if (checkoutModal) checkoutModal.style.display = 'flex';
+        });
+    }
+    
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const cart = JSON.parse(localStorage.getItem('seatask_working_cart') || '[]');
+            if (cart.length === 0) {
+                alert('Cart is empty!');
+                return;
+            }
+            
+            // Clear cart
+            localStorage.setItem('seatask_working_cart', JSON.stringify([]));
+            
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.innerText = 'Order placed successfully! Thank you for shopping at SeaTask.';
+                toast.style.opacity = '1';
+                toast.style.visibility = 'visible';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.visibility = 'hidden';
+                }, 3000);
+            } else {
+                alert('Order placed successfully!');
+            }
+            
+            if (checkoutModal) checkoutModal.style.display = 'none';
+            checkoutForm.reset();
+            
+            if (cartModal && cartModal.style.display === 'flex') {
+                cartModal.style.display = 'none';
+            }
+            
+            // Update cart count
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) cartCount.innerText = '0';
+        });
+    }
+    
+    window.addEventListener('click', (e) => {
+        if (cartModal && e.target === cartModal) cartModal.style.display = 'none';
+        if (checkoutModal && e.target === checkoutModal) checkoutModal.style.display = 'none';
+    });
 }
 
-const closeBtn = document.querySelector('#cartModal .close');
-const closeCheckout = document.querySelector('#checkoutModal .close-checkout');
-const continueBtn = document.getElementById('continueShoppingBtn');
-const checkoutBtn = document.getElementById('checkoutBtn');
-
-if (closeBtn) closeBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
-if (closeCheckout) closeCheckout.addEventListener('click', () => { if (checkoutModal) checkoutModal.style.display = 'none'; });
-if (continueBtn) continueBtn.addEventListener('click', () => { if (cartModal) cartModal.style.display = 'none'; });
-
-if (checkoutBtn) {
-checkoutBtn.addEventListener('click', () => {
-if (cart.length === 0) {
-const toast = document.getElementById('toast');
-if (toast) {
-toast.innerText = 'Cart is empty! Add items first.';
-toast.style.opacity = '1';
-toast.style.visibility = 'visible';
-setTimeout(() => {
-toast.style.opacity = '0';
-toast.style.visibility = 'hidden';
-}, 2000);
-}
-return;
-}
-if (cartModal) cartModal.style.display = 'none';
-if (checkoutModal) checkoutModal.style.display = 'flex';
-});
-}
-
-const checkoutForm = document.getElementById('checkoutForm');
-if (checkoutForm) {
-checkoutForm.addEventListener('submit', (e) => {
-e.preventDefault();
-
-if (cart.length === 0) {
-alert('Cart is empty!');
-return;
-}
-
-// Clear cart
-cart = [];
-saveCart();
-
-const toast = document.getElementById('toast');
-if (toast) {
-toast.innerText = 'Order placed successfully! Thank you for shopping at SeaTask.';
-toast.style.opacity = '1';
-toast.style.visibility = 'visible';
-setTimeout(() => {
-toast.style.opacity = '0';
-toast.style.visibility = 'hidden';
-}, 3000);
-} else {
-alert('Order placed successfully!');
-}
-
-if (checkoutModal) checkoutModal.style.display = 'none';
-checkoutForm.reset();
-
-if (cartModal && cartModal.style.display === 'flex') {
-renderCartModal();
-}
-});
-}
-
-window.addEventListener('click', (e) => {
-if (cartModal && e.target === cartModal) cartModal.style.display = 'none';
-if (checkoutModal && e.target === checkoutModal) checkoutModal.style.display = 'none';
-});
-}
-
-updateCartCount();
-updateCartTotal();
 loadProductDetail();
 initModals();
 </script>
-<!-- Footer Enhancements - Payment methods, Social media, Newsletter -->
+
 <script src="footer-enhancements.js"></script>
-<!-- Advanced Filters (for consistency) -->
 <script src="advanced-filters.js"></script>
-
-<!-- Activity History Tracker -->
 <script src="cart-history-tracker.js"></script>
-
-<!-- Fix for cart modal (must be last) -->
-<script src="fix-cart-modal.js"></script>
 
 </body>
 </html>
