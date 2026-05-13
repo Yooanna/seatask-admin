@@ -733,4 +733,31 @@ footer {
     transition: all 0.3s ease;
     z-index: 9999;
 }
+
+/* Improved User Icon / Login Button */
+.user-icon {
+    font-size: 14px !important;
+    background: rgba(255,255,255,0.15);
+    padding: 8px 20px !important;
+    border-radius: 40px;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.user-icon:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.02);
+}
+
+.user-icon img {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid white;
+}
+
 }

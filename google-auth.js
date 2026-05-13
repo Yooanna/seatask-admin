@@ -1,5 +1,6 @@
 // ========== GOOGLE LOGIN AUTHENTICATION ==========
 // Allows account selection every time (with prompt=select_account)
+// FIXED: Added proper Supabase configuration
 
 const AUTH_SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
 const AUTH_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsYWRsZWp0a2dqenBlaHZ6a3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODEwMTcsImV4cCI6MjA5MzY1NzAxN30.uzMR3lWl0GrKKIcpWZRDZ9ac1y_gdjOocAUweSSZMgI';
@@ -29,6 +30,8 @@ const authClient = {
         localStorage.removeItem('sb_session');
         localStorage.removeItem('sb_user');
         localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('seatask_cart_user_id');
+        localStorage.removeItem('seatask_persistent_user_id');
         
         // Clear any other possible storage
         sessionStorage.clear();
@@ -166,7 +169,6 @@ function updateAuthUI() {
             }
         };
         
-        // Add welcome tooltip with email
         userIcon.style.position = 'relative';
         
     } else {
