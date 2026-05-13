@@ -33,51 +33,18 @@
         return userId;
     }
     
-    // Get user's order history from localStorage (since Supabase may not have orders)
+    // Get user's order history from localStorage
     async function getUserOrderHistory() {
-        // First try to get from localStorage
         const localOrders = JSON.parse(localStorage.getItem('order_history') || '[]');
-        
-        if (localOrders.length > 0) {
-            console.log('Orders from localStorage:', localOrders.length);
-            return localOrders;
-        }
-        
-        // Fallback to Supabase if no localStorage orders
-        const userId = getCurrentUserId();
-        try {
-            const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?user_id=eq.${userId}&select=*&order=created_at.desc`, {
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                }
-            });
-            const orders = await response.json();
-            
-            // Get order items for each order
-            for (const order of orders) {
-                const itemsResponse = await fetch(`${SUPABASE_URL}/rest/v1/order_items?order_id=eq.${order.id}&select=*`, {
-                    headers: {
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-                    }
-                });
-                order.items = await itemsResponse.json();
-            }
-            return orders;
-        } catch (error) {
-            console.error('Error fetching orders from Supabase:', error);
-            return [];
-        }
+        console.log('Orders from localStorage:', localOrders.length);
+        return localOrders;
     }
     
-    // Get user's cart items from WORKING CART SYSTEM (not Supabase)
+    // Get user's cart items from WORKING CART SYSTEM
     async function getUserCartItems() {
-        // Read from the working cart system (same as main page)
         const CART_KEY = 'my_simple_cart';
         const savedCart = localStorage.getItem(CART_KEY);
         const cartItems = savedCart ? JSON.parse(savedCart) : [];
-        
         console.log('Cart items from working cart:', cartItems.length);
         return cartItems;
     }
@@ -129,6 +96,20 @@
             window.onclick = (e) => {
                 if (e.target === modal) modal.style.display = 'none';
             };
+        } else {
+            // Update tab counts when modal already exists
+            const ordersTab = modal.querySelector('.history-tab[data-tab="orders"]');
+            const cartTab = modal.querySelector('.history-tab[data-tab="cart"]');
+            if (ordersTab) ordersTab.innerHTML = `🛒 Orders (${orders.length})`;
+            if (cartTab) cartTab.innerHTML = `🛍️ Cart Items (${cartItems.length})`;
+            
+            // Reset to first tab
+            modal.querySelectorAll('.history-tab').forEach(t => t.classList.remove('active'));
+            modal.querySelectorAll('.history-tab-content').forEach(c => c.classList.remove('active'));
+            const ordersTabBtn = modal.querySelector('.history-tab[data-tab="orders"]');
+            if (ordersTabBtn) ordersTabBtn.classList.add('active');
+            const ordersContent = document.getElementById('ordersTab');
+            if (ordersContent) ordersContent.classList.add('active');
         }
         
         modal.style.display = 'flex';
@@ -142,9 +123,9 @@
                 <div class="history-item">
                     <div class="history-item-header">
                         <strong>${order.order_number || 'Order'}</strong>
-                        <span class="history-date">${new Date(order.date || order.created_at).toLocaleDateString()}</span>
+                        <span class="history-date">${new Date(order.date).toLocaleDateString()}</span>
                     </div>
-                    <div>Total: RM ${(order.total || order.total_amount || 0).toFixed(2)}</div>
+                    <div>Total: RM ${(order.total || 0).toFixed(2)}</div>
                     <div>Status: <span class="order-status">${order.status || 'completed'}</span></div>
                     <div class="history-item-products">
                         ${order.order_items ? order.order_items.map(item => `<div>• ${item.product_name} × ${item.quantity}</div>`).join('') : ''}
@@ -153,7 +134,7 @@
             `).join('');
         }
         
-        // Populate cart items from WORKING CART
+        // Populate cart items
         const cartList = document.getElementById('cartList');
         if (cartItems.length === 0) {
             cartList.innerHTML = '<div style="text-align:center; padding:40px;">Your cart is empty.</div>';
@@ -266,60 +247,11 @@
         document.head.appendChild(style);
     }
     
-    // Save order to history when checkout is completed
-    function saveOrderToHistory(orderData) {
-        const orderHistory = JSON.parse(localStorage.getItem('order_history') || '[]');
-        orderHistory.unshift({
-            order_number: orderData.order_number,
-            date: new Date().toISOString(),
-            total: orderData.total_amount,
-            status: 'completed',
-            order_items: orderData.order_items
-        });
-        // Keep only last 20 orders
-        localStorage.setItem('order_history', JSON.stringify(orderHistory.slice(0, 20)));
-    }
-    
-    // Hook into checkout form to save orders
-    function hookCheckoutForOrderHistory() {
-        const checkoutForm = document.getElementById('checkoutForm');
-        if (!checkoutForm) {
-            setTimeout(hookCheckoutForOrderHistory, 500);
-            return;
-        }
-        
-        const originalSubmit = checkoutForm.onsubmit;
-        checkoutForm.addEventListener('submit', function(e) {
-            // Get cart items before they are cleared
-            const CART_KEY = 'my_simple_cart';
-            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
-            
-            if (cart.length > 0) {
-                const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const orderNumber = 'ORD-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
-                const fullName = document.querySelector('[name="fullName"]')?.value || 'Guest';
-                
-                saveOrderToHistory({
-                    order_number: orderNumber,
-                    total_amount: totalAmount,
-                    order_items: cart.map(item => ({
-                        product_name: item.name,
-                        quantity: item.quantity,
-                        price: item.price
-                    }))
-                });
-                
-                console.log('✅ Order saved to history:', orderNumber);
-            }
-        });
-    }
-    
     // Initialize
     function initHistoryTracker() {
         addHistoryStyles();
         addActivityHistoryButton();
-        hookCheckoutForOrderHistory();
-        console.log('✅ Activity history tracker active - reads from working cart and localStorage orders!');
+        console.log('✅ Activity history tracker active - Orders count will show correctly!');
     }
     
     if (document.readyState === 'loading') {
@@ -328,7 +260,8 @@
         initHistoryTracker();
     }
     
-    // Export functions for use in console
+    // Export functions
     window.getUserOrderHistory = getUserOrderHistory;
     window.getUserCartItems = getUserCartItems;
+    window.refreshHistoryModal = showUserHistoryModal;
 })();
