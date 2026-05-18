@@ -1,13 +1,9 @@
-// ========== FOOTER ENHANCEMENT WITH POSTGRESQL ==========
-// Adds: Payment method logos, Social media links, Newsletter subscription (saved to PostgreSQL via API)
-// NO conflicts with existing code
+
 
 (function() {
-    // Change this line (around line 8):
+    
 const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
 
-
-    
     // Check if enhanced footer already exists
     function isFooterEnhanced() {
         return document.querySelector('.enhanced-footer') !== null;
@@ -47,15 +43,15 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
                     <div class="footer-section social-section">
                         <h4>Follow Us</h4>
                         <div class="social-links">
-                            <a href="https://facebook.com/seatask" target="_blank" class="social-link" data-social="facebook">
+                            <a href="https://www.facebook.com/profile.php?id=61589706664874" target="_blank" class="social-link" data-social="facebook" rel="noopener noreferrer">
                                 <span class="social-icon">📘</span>
                                 <span>Facebook</span>
                             </a>
-                            <a href="https://instagram.com/seatask" target="_blank" class="social-link" data-social="instagram">
+                            <a href="https://www.instagram.com/sea_task/" target="_blank" class="social-link" data-social="instagram" rel="noopener noreferrer">
                                 <span class="social-icon">📷</span>
                                 <span>Instagram</span>
                             </a>
-                            <a href="https://tiktok.com/@seatask" target="_blank" class="social-link" data-social="tiktok">
+                            <a href="https://www.tiktok.com/@seatask001" target="_blank" class="social-link" data-social="tiktok" rel="noopener noreferrer">
                                 <span class="social-icon">🎵</span>
                                 <span>TikTok</span>
                             </a>
@@ -85,7 +81,7 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
         // Track social link clicks
         trackSocialClicks();
         
-        console.log('✅ Enhanced footer with PostgreSQL integration added!');
+        console.log('✅ Enhanced footer with social media links added!');
     }
     
     // Save newsletter subscription to PostgreSQL via API
@@ -295,29 +291,30 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
             
             .social-links {
                 display: flex;
-                gap: 20px;
+                gap: 15px;
                 flex-wrap: wrap;
             }
             
             .social-link {
-                display: flex;
+                display: inline-flex;
                 align-items: center;
                 gap: 8px;
+                background: rgba(255,255,255,0.1);
+                padding: 8px 20px;
+                border-radius: 30px;
                 color: white;
                 text-decoration: none;
-                padding: 8px 16px;
-                background: rgba(255,255,255,0.1);
-                border-radius: 30px;
-                transition: all 0.2s;
+                font-size: 14px;
+                transition: all 0.3s ease;
             }
             
             .social-link:hover {
-                background: rgba(255,255,255,0.2);
-                transform: translateX(5px);
+                background: rgba(255,255,255,0.25);
+                transform: translateY(-2px);
             }
             
             .social-icon {
-                font-size: 20px;
+                font-size: 18px;
             }
             
             .newsletter-text {
@@ -430,5 +427,5 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
         initFooterEnhancement();
     }
     
-    console.log('✅ Footer enhancement ready - connects to PostgreSQL API!');
+    console.log('✅ Footer enhancement ready - Social media links: Facebook, Instagram, TikTok');
 })();

@@ -760,4 +760,52 @@ footer {
     border: 2px solid white;
 }
 
+/* Footer Social Media Section */
+.footer-social-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.footer-social-section h4 {
+    font-size: 16px;
+    margin-bottom: 15px;
+    color: #0a4b6e;
+}
+
+.footer-social-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.footer-social-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: rgba(25, 118, 165, 0.1);
+    border-radius: 30px;
+    color: #1a3a5c;
+    text-decoration: none;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.footer-social-link:hover {
+    background: #1976a5;
+    color: white;
+    transform: translateY(-2px);
+}
+
+.footer-social-link span {
+    font-size: 18px;
+}
+
+/* Remove duplicate chatbot styles if any */
+#universalChatbotContainer {
+    z-index: 9999;
+}
+
 }
