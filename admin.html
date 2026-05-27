@@ -147,7 +147,7 @@
             background: white;
             padding: 30px;
             border-radius: 20px;
-            max-width: 500px;
+            max-width: 550px;
             width: 90%;
             max-height: 85vh;
             overflow-y: auto;
@@ -174,6 +174,10 @@
             border-radius: 8px;
             font-size: 14px;
         }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
         #adminToast {
             position: fixed;
             bottom: 30px;
@@ -194,6 +198,11 @@
             object-fit: cover;
             border-radius: 8px;
             background: #f0f4f8;
+        }
+        .loading-spinner {
+            text-align: center;
+            padding: 40px;
+            color: #1976a5;
         }
     </style>
 </head>
@@ -233,7 +242,7 @@
                             <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>
                         </thead>
                         <tbody id="productsList">
-                            <tr><td colspan="5" style="text-align:center;">Loading products...<br>Please wait...</td></tr>
+                            <tr><td colspan="5" style="text-align:center;">Loading products...<br>Please wait...</td</tr>
                         </tbody>
                     </table>
                 </div>
@@ -241,7 +250,9 @@
             <div id="categoriesTab" class="tab-content" style="display:none;">
                 <div class="products-table-container">
                     <table class="products-table">
-                        <thead><tr><th>Icon</th><th>Name</th><th>Actions</th></tr></thead>
+                        <thead>
+                            <tr><th>Icon</th><th>Name</th><th>Actions</th>
+                        </thead>
                         <tbody id="categoriesList"></tbody>
                     </table>
                 </div>
@@ -332,7 +343,7 @@
 
         async function loadProducts() {
             const tbody = document.getElementById('productsList');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading products...<br>⏳ Please wait...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="loading-spinner">Loading products from Supabase...</td></tr>';
             
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.asc`, {
@@ -354,12 +365,11 @@
                             <td>${escapeHtml(p.category || '-')}</td>
                             <td>RM ${Number(p.price).toFixed(2)}</td>
                             <td>
-                                <button class="edit-btn" onclick="editProduct(${p.id})">✏️ Edit</button>
+                                <button class="edit-btn" onclick='editProduct(${JSON.stringify(p)})'>✏️ Edit</button>
                                 <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑 Delete</button>
                             </td>
                         </tr>
                     `}).join('');
-                    showToast(`✅ Loaded ${products.length} products`, 'success');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">📦 No products found. Click "Add New Product" to create one.</td></tr>';
                 }
@@ -384,69 +394,192 @@
             }
         };
 
-        window.editProduct = async (id) => {
-            const newName = prompt('Enter new product name:');
-            if (newName && newName.trim()) {
+        // FULL EDIT PRODUCT FUNCTION - Opens modal with all fields
+        window.editProduct = (product) => {
+            // Create modal HTML with all product fields pre-filled
+            const modalHtml = `
+                <div id="editModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="closeEditModal()">&times;</span>
+                        <h2>✏️ Edit Product: ${escapeHtml(product.name)}</h2>
+                        <form id="editProductForm">
+                            <div class="form-group">
+                                <label>Product Name:</label>
+                                <input type="text" id="editName" value="${escapeHtml(product.name)}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Category:</label>
+                                <select id="editCategory">
+                                    <option value="Shirt" ${product.category === 'Shirt' ? 'selected' : ''}>👕 Shirt</option>
+                                    <option value="Hat" ${product.category === 'Hat' ? 'selected' : ''}>🧢 Hat</option>
+                                    <option value="Accessories" ${product.category === 'Accessories' ? 'selected' : ''}>🎒 Accessories</option>
+                                    <option value="Electronics" ${product.category === 'Electronics' ? 'selected' : ''}>🔊 Electronics</option>
+                                    <option value="Badminton" ${product.category === 'Badminton' ? 'selected' : ''}>🏸 Badminton</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (RM):</label>
+                                <input type="number" id="editPrice" step="0.01" value="${product.price}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL:</label>
+                                <input type="text" id="editImageUrl" value="${product.image_url || ''}" placeholder="https://...">
+                                <small>Leave empty to use default category image</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Rating (1-5):</label>
+                                <input type="number" id="editRating" step="0.1" min="0" max="5" value="${product.rating || 4.5}">
+                            </div>
+                            <div class="form-group">
+                                <label>Review Count:</label>
+                                <input type="number" id="editReviewCount" step="1" min="0" value="${product.review_count || 0}">
+                            </div>
+                            <div class="form-group">
+                                <label>Description:</label>
+                                <textarea id="editDescription" rows="4">${escapeHtml(product.description || '')}</textarea>
+                            </div>
+                            <button type="submit" class="login-btn" style="margin-top: 10px;">💾 Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            closeEditModal();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            document.getElementById('editProductForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const updatedProduct = {
+                    name: document.getElementById('editName').value,
+                    category: document.getElementById('editCategory').value,
+                    price: parseFloat(document.getElementById('editPrice').value),
+                    image_url: document.getElementById('editImageUrl').value || defaultImages[document.getElementById('editCategory').value] || '',
+                    rating: parseFloat(document.getElementById('editRating').value),
+                    review_count: parseInt(document.getElementById('editReviewCount').value),
+                    description: document.getElementById('editDescription').value
+                };
+                
                 try {
-                    await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${product.id}`, {
                         method: 'PATCH',
                         headers: { 
                             'apikey': SUPABASE_ANON_KEY, 
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`, 
                             'Content-Type': 'application/json' 
                         },
-                        body: JSON.stringify({ name: newName.trim() })
+                        body: JSON.stringify(updatedProduct)
                     });
-                    showToast('✅ Product updated successfully!', 'success');
-                    loadProducts();
+                    
+                    if (response.ok) {
+                        showToast('✅ Product updated successfully!', 'success');
+                        closeEditModal();
+                        loadProducts();
+                    } else {
+                        const error = await response.text();
+                        showToast('❌ Error: ' + error, 'error');
+                    }
                 } catch (error) {
-                    showToast('❌ Error updating product', 'error');
+                    showToast('❌ Error updating product: ' + error.message, 'error');
                 }
-            }
+            });
         };
 
-        // Add New Product
+        // Add New Product Modal
         document.getElementById('addNewBtn')?.addEventListener('click', () => {
-            const name = prompt('Product name:');
-            if (!name) return;
-            const category = prompt('Category (Shirt, Hat, Accessories, Electronics, Badminton):');
-            if (!category) return;
-            const price = parseFloat(prompt('Price (RM):'));
-            if (isNaN(price)) return;
+            const modalHtml = `
+                <div id="addModal" class="modal-overlay">
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="closeAddModal()">&times;</span>
+                        <h2>➕ Add New Product</h2>
+                        <form id="addProductForm">
+                            <div class="form-group">
+                                <label>Product Name:</label>
+                                <input type="text" id="addName" required placeholder="e.g., Premium Cotton T-Shirt">
+                            </div>
+                            <div class="form-group">
+                                <label>Category:</label>
+                                <select id="addCategory" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Shirt">👕 Shirt</option>
+                                    <option value="Hat">🧢 Hat</option>
+                                    <option value="Accessories">🎒 Accessories</option>
+                                    <option value="Electronics">🔊 Electronics</option>
+                                    <option value="Badminton">🏸 Badminton</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Price (RM):</label>
+                                <input type="number" id="addPrice" step="0.01" required placeholder="0.00">
+                            </div>
+                            <div class="form-group">
+                                <label>Image URL:</label>
+                                <input type="text" id="addImageUrl" placeholder="https://...">
+                                <small>Leave empty for default category image</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Rating (1-5):</label>
+                                <input type="number" id="addRating" step="0.1" min="0" max="5" value="4.5">
+                            </div>
+                            <div class="form-group">
+                                <label>Description:</label>
+                                <textarea id="addDescription" rows="3" placeholder="Product description..."></textarea>
+                            </div>
+                            <button type="submit" class="login-btn" style="margin-top: 10px;">➕ Create Product</button>
+                        </form>
+                    </div>
+                </div>
+            `;
             
-            const imageUrl = prompt('Image URL (or leave empty for default):', defaultImages[category] || '');
+            closeAddModal();
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
             
-            const newProduct = {
-                name: name,
-                category: category,
-                price: price,
-                image_url: imageUrl || defaultImages[category] || 'https://picsum.photos/id/1/400/400',
-                rating: 4.5,
-                review_count: 0,
-                description: ''
-            };
-            
-            fetch(`${SUPABASE_URL}/rest/v1/products`, {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON_KEY,
-                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(newProduct)
-            })
-            .then(async response => {
-                if (response.ok) {
-                    showToast('✅ Product created successfully!', 'success');
-                    loadProducts();
-                } else {
-                    const error = await response.text();
-                    showToast('❌ Error: ' + error, 'error');
+            document.getElementById('addProductForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const category = document.getElementById('addCategory').value;
+                let imageUrl = document.getElementById('addImageUrl').value;
+                
+                if (!imageUrl) {
+                    imageUrl = defaultImages[category] || 'https://picsum.photos/id/1/400/400';
                 }
-            })
-            .catch(error => showToast('❌ Error: ' + error.message, 'error'));
+                
+                const newProduct = {
+                    name: document.getElementById('addName').value,
+                    category: category,
+                    price: parseFloat(document.getElementById('addPrice').value),
+                    image_url: imageUrl,
+                    rating: parseFloat(document.getElementById('addRating').value),
+                    description: document.getElementById('addDescription').value,
+                    review_count: 0
+                };
+                
+                try {
+                    const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newProduct)
+                    });
+                    
+                    if (response.ok) {
+                        showToast('✅ Product created successfully!', 'success');
+                        closeAddModal();
+                        loadProducts();
+                    } else {
+                        const error = await response.text();
+                        showToast('❌ Error: ' + error, 'error');
+                    }
+                } catch (error) {
+                    showToast('❌ Error: ' + error.message, 'error');
+                }
+            });
         });
 
+        // Category Management
         function loadCategories() {
             document.getElementById('categoriesList').innerHTML = categories.map(c => `
                 <tr>
@@ -490,6 +623,16 @@
                 showToast(`✅ Category "${newName}" added!`, 'success');
             }
         });
+
+        // Modal close functions
+        window.closeEditModal = () => {
+            const modal = document.getElementById('editModal');
+            if (modal) modal.remove();
+        };
+        window.closeAddModal = () => {
+            const modal = document.getElementById('addModal');
+            if (modal) modal.remove();
+        };
 
         // Tab Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
