@@ -1,0 +1,125 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', sans-serif; background: #eef5fa; }
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #1976a5, #2c8cbb);
+}
+.login-box {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+.login-box h1 { margin-bottom: 10px; color: #1a3a5c; }
+.login-input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #c8dce8;
+    border-radius: 8px;
+}
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: #1976a5;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+.login-error { color: red; margin-top: 10px; }
+
+#adminDashboard {
+    display: flex;
+    min-height: 100vh;
+}
+.sidebar {
+    width: 260px;
+    background: #1a3a5c;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+.sidebar-logo { margin-bottom: 30px; text-align: center; }
+.sidebar-nav { flex: 1; }
+.nav-btn {
+    width: 100%;
+    padding: 12px;
+    margin: 5px 0;
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+}
+.nav-btn:hover, .nav-btn.active { background: #1976a5; }
+.logout-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+.main-content {
+    flex: 1;
+    padding: 20px;
+}
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.add-btn {
+    background: #1976a5;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+.products-table-container {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    overflow-x: auto;
+}
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.products-table th, .products-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #e0eef5;
+}
+.products-table th { background: #f5f8fa; }
+.edit-btn {
+    background: #1976a5;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+.delete-btn {
+    background: #dc2626;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+}
