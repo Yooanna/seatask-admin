@@ -86,8 +86,10 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        .add-btn {
+        .add-btn, .refresh-btn {
             background: #1976a5;
             color: white;
             border: none;
@@ -95,15 +97,7 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        .refresh-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
+        .refresh-btn { background: #27ae60; }
         .products-table-container {
             background: white;
             border-radius: 16px;
@@ -194,6 +188,13 @@
             transition: 0.3s;
             pointer-events: none;
         }
+        .product-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f0f4f8;
+        }
     </style>
 </head>
 <body>
@@ -258,6 +259,15 @@
         const ADMIN_USERNAME = 'admin';
         const ADMIN_PASSWORD = 'Seatask2025';
         
+        // Default product images (working URLs)
+        const defaultImages = {
+            'Shirt': 'https://img.freepik.com/premium-photo/blue-cotton-tshirt-with-luxury-design-tshirt-mockup_677428-1057.jpg',
+            'Hat': 'https://tse1.mm.bing.net/th/id/OIP.ti9ujzBZ9gwzAkfr34i6mgAAAA',
+            'Accessories': 'https://images.pexels.com/photos/380774/pexels-photo-380774.jpeg',
+            'Electronics': 'https://images.pexels.com/photos/12789436/pexels-photo-12789436.jpeg',
+            'Badminton': 'https://cdn.store-assets.com/s/964873/i/49661033.jpg'
+        };
+        
         // Categories array
         let categories = [
             { icon: '👕', name: 'Shirt', id: 1 },
@@ -281,6 +291,14 @@
             toast.innerText = message;
             toast.style.opacity = '1';
             setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+        }
+
+        // Get valid image URL
+        function getValidImageUrl(product) {
+            if (product.image_url && product.image_url.startsWith('http') && !product.image_url.includes('via.placeholder.com')) {
+                return product.image_url;
+            }
+            return defaultImages[product.category] || 'https://picsum.photos/id/1/50/50';
         }
 
         // Authentication
@@ -313,7 +331,6 @@
             checkAuth();
         });
 
-        // Refresh button
         document.getElementById('refreshBtn')?.addEventListener('click', () => {
             showToast('🔄 Refreshing products...', 'success');
             loadProducts();
@@ -341,9 +358,11 @@
                 console.log('Products loaded:', products.length);
                 
                 if (products && products.length > 0) {
-                    tbody.innerHTML = products.map(p => `
+                    tbody.innerHTML = products.map(p => {
+                        const imageUrl = getValidImageUrl(p);
+                        return `
                         <tr data-id="${p.id}">
-                            <td><img src="${p.image_url || 'https://via.placeholder.com/50'}" width="50" height="50" style="object-fit:cover; border-radius:8px;" onerror="this.src='https://via.placeholder.com/50'"></td>
+                            <td><img src="${imageUrl}" width="50" height="50" class="product-img" onerror="this.src='https://picsum.photos/id/1/50/50'"></td>
                             <td><strong>${escapeHtml(p.name)}</strong></td>
                             <td>${escapeHtml(p.category || '-')}</td>
                             <td>RM ${Number(p.price).toFixed(2)}</td>
@@ -352,14 +371,14 @@
                                 <button class="delete-btn" onclick="deleteProduct(${p.id})">🗑 Delete</button>
                             </td>
                         </tr>
-                    `).join('');
+                    `}).join('');
                     showToast(`✅ Loaded ${products.length} products`, 'success');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">📦 No products found. Click "Add New Product" to create one.</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ Error: ${error.message}<br>Make sure Supabase is accessible.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ Error: ${error.message}</td></tr>`;
                 showToast('Error loading products: ' + error.message, 'error');
             }
         }
@@ -378,16 +397,18 @@
                 
                 if (response.ok) {
                     showToast('✅ Product deleted successfully!', 'success');
-                    await loadProducts(); // Refresh immediately
+                    await loadProducts();
                 } else {
-                    throw new Error('Delete failed');
+                    const error = await response.text();
+                    throw new Error(error);
                 }
             } catch (error) {
-                showToast('❌ Error deleting product', 'error');
+                console.error('Delete error:', error);
+                showToast('❌ Error deleting product: ' + error.message, 'error');
             }
         };
 
-        // Edit Product with Full Form Modal
+        // Edit Product
         window.editProduct = async (id) => {
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}&select=*`, {
@@ -447,6 +468,7 @@
                 
                 document.getElementById('editProductForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
+                    
                     const updatedProduct = {
                         name: document.getElementById('editName').value,
                         category: document.getElementById('editCategory').value,
@@ -457,7 +479,7 @@
                     };
                     
                     try {
-                        await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
+                        const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${id}`, {
                             method: 'PATCH',
                             headers: {
                                 'apikey': SUPABASE_ANON_KEY,
@@ -466,19 +488,27 @@
                             },
                             body: JSON.stringify(updatedProduct)
                         });
-                        showToast('✅ Product updated successfully!', 'success');
-                        closeEditModal();
-                        await loadProducts(); // Refresh immediately
+                        
+                        if (updateResponse.ok) {
+                            showToast('✅ Product updated successfully!', 'success');
+                            closeEditModal();
+                            await loadProducts();
+                        } else {
+                            const error = await updateResponse.text();
+                            throw new Error(error);
+                        }
                     } catch (error) {
-                        showToast('❌ Error updating product', 'error');
+                        console.error('Update error:', error);
+                        showToast('❌ Error updating product: ' + error.message, 'error');
                     }
                 });
             } catch (error) {
+                console.error('Load product error:', error);
                 showToast('❌ Error loading product data', 'error');
             }
         };
 
-        // Add New Product Modal
+        // Add New Product
         document.getElementById('addNewBtn')?.addEventListener('click', () => {
             const modalHtml = `
                 <div id="addModal" class="modal-overlay">
@@ -508,7 +538,7 @@
                             <div class="form-group">
                                 <label>Image URL:</label>
                                 <input type="text" id="addImageUrl" placeholder="https://...">
-                                <small>Leave empty for placeholder image</small>
+                                <small>Leave empty for default category image</small>
                             </div>
                             <div class="form-group">
                                 <label>Rating (1-5):</label>
@@ -530,11 +560,18 @@
             document.getElementById('addProductForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
+                const category = document.getElementById('addCategory').value;
+                let imageUrl = document.getElementById('addImageUrl').value;
+                
+                if (!imageUrl) {
+                    imageUrl = defaultImages[category] || 'https://picsum.photos/id/1/400/400';
+                }
+                
                 const newProduct = {
                     name: document.getElementById('addName').value,
-                    category: document.getElementById('addCategory').value,
+                    category: category,
                     price: parseFloat(document.getElementById('addPrice').value),
-                    image_url: document.getElementById('addImageUrl').value || 'https://via.placeholder.com/400',
+                    image_url: imageUrl,
                     rating: parseFloat(document.getElementById('addRating').value),
                     description: document.getElementById('addDescription').value,
                     review_count: 0
@@ -553,21 +590,21 @@
                         body: JSON.stringify(newProduct)
                     });
                     
-                    const result = await response.json();
-                    console.log('Server response:', result);
-                    
                     if (response.ok) {
-                        showToast('✅ Product created successfully! Refreshing list...', 'success');
+                        const result = await response.json();
+                        console.log('Product created:', result);
+                        showToast('✅ Product created successfully!', 'success');
                         closeAddModal();
-                        await loadProducts(); // Refresh immediately
-                        // Clear form
+                        await loadProducts();
                         document.getElementById('addProductForm').reset();
                     } else {
-                        showToast('❌ Error: ' + JSON.stringify(result), 'error');
+                        const error = await response.text();
+                        console.error('Create error:', error);
+                        showToast('❌ Error creating product: ' + error, 'error');
                     }
                 } catch (error) {
-                    console.error('Error creating product:', error);
-                    showToast('❌ Error creating product: ' + error.message, 'error');
+                    console.error('Network error:', error);
+                    showToast('❌ Error: ' + error.message, 'error');
                 }
             });
         });
@@ -636,12 +673,8 @@
                 document.getElementById('productsTab').style.display = tab === 'products' ? 'block' : 'none';
                 document.getElementById('categoriesTab').style.display = tab === 'categories' ? 'block' : 'none';
                 document.getElementById('pageTitle').innerText = tab === 'products' ? 'Products Management' : 'Categories Management';
-                const addBtn = document.getElementById('addNewBtn');
-                if (addBtn) {
-                    addBtn.style.display = tab === 'products' ? 'block' : 'none';
-                }
                 if (tab === 'products') {
-                    loadProducts(); // Refresh when switching to products tab
+                    loadProducts();
                 }
             });
         });
