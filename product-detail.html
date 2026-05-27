@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SeaTask | Product Details</title>
 <link rel="stylesheet" href="style.css">
-<script src="product-angles.js"></script>
-<script src="universal-chatbot.js"></script>
 <style>
 .product-detail-page {
 max-width: 1200px;
@@ -367,15 +365,6 @@ max-width: 1200px;
 margin: 0 auto;
 text-align: center;
 }
-.footer-section h4 {
-margin-bottom: 10px;
-color: #0a4b6e;
-font-size: 18px;
-}
-.footer-section p {
-color: #1a3a5c;
-font-size: 14px;
-}
 .copyright {
 text-align: center;
 margin-top: 25px;
@@ -385,13 +374,8 @@ font-size: 12px;
 color: #4a627a;
 }
 @media (max-width: 768px) {
-.product-detail-main {
-flex-direction: column;
-padding: 20px;
-}
-.recommendations-grid {
-grid-template-columns: repeat(2, 1fr);
-}
+.product-detail-main { flex-direction: column; padding: 20px; }
+.recommendations-grid { grid-template-columns: repeat(2, 1fr); }
 }
 </style>
 </head>
@@ -412,54 +396,7 @@ grid-template-columns: repeat(2, 1fr);
 
 <div class="product-detail-page" id="productDetailPage">
 <a href="index.html" class="back-button">← Back to Marketplace</a>
-<div id="detailContent">Loading...</div>
-</div>
-
-<!-- Cart Modal -->
-<div id="cartModal" class="modal">
-<div class="modal-content">
-<span class="close">&times;</span>
-<h2>Your Shopping Cart</h2>
-<div id="cartItems"></div>
-<div class="cart-summary">
-<div class="cart-total">Total: RM <span id="cartTotal">0.00</span></div>
-<div class="cart-actions">
-<button id="continueShoppingBtn" class="btn-secondary">Continue Shopping</button>
-<button id="checkoutBtn" class="btn-primary">Proceed to Checkout</button>
-</div>
-</div>
-</div>
-</div>
-
-<!-- Checkout Modal -->
-<div id="checkoutModal" class="modal">
-<div class="modal-content">
-<span class="close-checkout">&times;</span>
-<h2>Complete Your Order</h2>
-<form id="checkoutForm">
-<div class="form-group">
-<input type="text" name="fullName" placeholder="Full Name" required>
-</div>
-<div class="form-group">
-<input type="email" name="email" placeholder="Email Address" required>
-</div>
-<div class="form-group">
-<input type="tel" name="phone" placeholder="Phone Number" required>
-</div>
-<div class="form-group">
-<input type="text" name="address" placeholder="Delivery Address" required>
-</div>
-<div class="form-group">
-<select name="paymentMethod" required>
-<option value="">Select Payment Method</option>
-<option>Credit / Debit Card</option>
-<option>Sea-Pay Wallet</option>
-<option>Cash on Delivery</option>
-</select>
-</div>
-<button type="submit" class="btn-submit">Place Order</button>
-</form>
-</div>
+<div id="detailContent">Loading product from database...</div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -474,312 +411,78 @@ grid-template-columns: repeat(2, 1fr);
 <p class="copyright">&copy; 2025 SeaTask Marketplace — All rights reserved.</p>
 </footer>
 
-<script src="footer-enhancements.js"></script>
-<script src="advanced-filters.js"></script>
-<script src="cart-history-tracker.js"></script>
-
 <script>
-// PRODUCT DATABASE
-const products = [
-{ id: 1, name: "Premium Cotton T-Shirt", category: "Shirt", price: 79.00, rating: 4.8, reviewCount: 1247, image: "https://img.freepik.com/premium-photo/blue-cotton-tshirt-with-luxury-design-tshirt-mockup_677428-1057.jpg", brand: "SeaTask Original", origin: "Made in Malaysia", material: "100% Organic Cotton", description: "Premium quality cotton t-shirt with SeaTask logo. Breathable, soft, and perfect for daily wear.", care: "Machine wash cold. Do not bleach. Tumble dry low.", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Blue", "Black", "White", "Red"] },
-{ id: 2, name: "Compact Travel Umbrella", category: "Accessories", price: 45.00, rating: 4.6, reviewCount: 892, image: "https://m.media-amazon.com/images/I/412DN-c2swL._AC_SL1500_.jpg", brand: "SeaTask Travel Gear", origin: "Made in China", material: "Fiberglass + Pongee Fabric", description: "Ultra-compact travel umbrella that fits in any bag.", care: "Air dry after use. Do not force close.", colors: ["Black", "Navy", "Red"] },
-{ id: 3, name: "Bluetooth Speaker", category: "Electronics", price: 129.00, rating: 4.9, reviewCount: 3156, image: "https://wonderfulengineering.com/wp-content/uploads/2022/11/10-Best-Portable-Bluetooth-Speaker9-1024x1024.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia", material: "ABS Plastic + Silicone", description: "Portable Bluetooth speaker with 20-hour battery life.", care: "Charge with included USB-C cable.", colors: ["Black", "Blue", "Red"] },
-{ id: 4, name: "Insulated Water Bottle", category: "Accessories", price: 35.00, rating: 4.7, reviewCount: 2143, image: "https://i5.walmartimages.com/seo/40oz-Insulated-Water-Bottles-2-Leak-Proof-Lids-Spout-Lid-Straw-Lid-Wide-Mouth-Sport-Bottle-Straw-Stainless-Steel-Powder-Coated-Flask-Double-Walled-Va_596521a9-6a7c-46e7-9b4d-23a9b9e550e8.4d4eaa5fb8ff569a4ba540b3024479e0.jpeg", brand: "SeaTask Hydration", origin: "Made in Malaysia", material: "18/8 Stainless Steel", description: "Double-walled insulated water bottle keeps drinks cold for 24 hours.", care: "Hand wash recommended.", colors: ["White", "Black", "Green", "Pink"], sizes: ["500ml", "750ml", "1L"] },
-{ id: 5, name: "Adjustable Baseball Cap", category: "Hat", price: 29.00, rating: 4.5, reviewCount: 567, image: "https://tse1.mm.bing.net/th/id/OIP.ti9ujzBZ9gwzAkfr34i6mgAAAA", brand: "SeaTask Original", origin: "Made in Vietnam", material: "Cotton Blend", description: "Classic baseball cap with embroidered SeaTask logo.", care: "Spot clean only. Air dry.", colors: ["Navy", "Black", "White", "Gray"] },
-{ id: 6, name: "Wireless Earbuds", category: "Electronics", price: 89.00, rating: 4.7, reviewCount: 1872, image: "https://m.media-amazon.com/images/I/610OFtgRe7L.jpg", brand: "SeaTask Audio", origin: "Designed in Malaysia", material: "ABS Plastic", description: "True wireless earbuds with charging case.", care: "Clean ear tips regularly.", colors: ["White", "Black"] },
-{ id: 7, name: "Gym Bag", category: "Accessories", price: 59.00, rating: 4.6, reviewCount: 734, image: "https://th.bing.com/th/id/R.da02c3df9c583a25a23afb65d2841547", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Waterproof Nylon", description: "Spacious gym bag with separate shoe compartment.", care: "Wipe clean with damp cloth.", colors: ["Black", "Gray", "Navy"] },
-{ id: 8, name: "Smart Watch Band", category: "Electronics", price: 49.00, rating: 4.4, reviewCount: 423, image: "https://m.media-amazon.com/images/I/716X7VCEaeL._AC_SL1500_.jpg", brand: "SeaTask Accessories", origin: "Made in Malaysia", material: "Medical Grade Silicone", description: "Comfortable smartwatch band with stainless steel buckle.", care: "Wipe with damp cloth.", colors: ["Black", "White", "Blue", "Red", "Green"] },
-{ id: 9, name: "Carbon Fiber Badminton Racket", category: "Badminton", price: 159.00, rating: 4.9, reviewCount: 891, image: "https://cdn.store-assets.com/s/964873/i/49661033.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Carbon Fiber + Graphite", description: "Professional-grade badminton racket with carbon fiber frame.", care: "Keep in protective bag.", colors: ["Black", "Blue", "Red"] },
-{ id: 10, name: "Durable Shuttlecock (6pcs)", category: "Badminton", price: 25.00, rating: 4.6, reviewCount: 456, image: "https://genesissports.co.ke/wp-content/uploads/2023/09/58e97e_f6f8a231e7cb427da7d80d6a4e636f36mv2.webp", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Goose Feather + Cork Base", description: "Premium goose feather shuttlecocks. Pack of 6.", care: "Store in cool dry place." },
-{ id: 11, name: "Badminton Training Bag", category: "Badminton", price: 69.00, rating: 4.7, reviewCount: 234, image: "https://badminton-shop.fr/wp-content/uploads/2025/09/Hundred-Trailblazer-Bag-White-Badmintontaske.jpg", brand: "SeaTask Sports", origin: "Made in Vietnam", material: "Polyester + Mesh", description: "Professional badminton bag for 2 rackets and accessories.", care: "Spot clean with mild detergent." },
-{ id: 12, name: "Professional Badminton Net", category: "Badminton", price: 89.00, rating: 4.8, reviewCount: 167, image: "https://myoutdoorsports.co.uk/wp-content/uploads/2022/04/buy-badminton-net-online.jpg", brand: "SeaTask Sports", origin: "Made in Malaysia", material: "Polyethylene + Steel Cable", description: "Regulation-size badminton net with steel cable.", care: "Store dry. Clean with soft brush." }
-];
+// Supabase Configuration
+const SUPABASE_URL = 'https://fladlejtkgjzpehvzkub.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsYWRsZWp0a2dqenBlaHZ6a3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwODEwMTcsImV4cCI6MjA5MzY1NzAxN30.uzMR3lWl0GrKKIcpWZRDZ9ac1y_gdjOocAUweSSZMgI';
 
-// ========== SAME CART SYSTEM AS MAIN PAGE ==========
-(function() {
-    console.log('🛒 DETAIL PAGE CART SYSTEM LOADING...');
-    
-    const CART_KEY = 'my_simple_cart';
-    let cart = [];
-    
-    function loadCart() {
-        const saved = localStorage.getItem(CART_KEY);
-        if (saved) {
-            cart = JSON.parse(saved);
-        }
-        updateCartDisplay();
-    }
-    
-    function saveCart() {
-        localStorage.setItem(CART_KEY, JSON.stringify(cart));
-        updateCartDisplay();
-    }
-    
-    function updateCartDisplay() {
-        const total = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        const countElement = document.getElementById('cartCount');
-        if (countElement) countElement.innerText = total;
-    }
-    
-    // THIS IS THE KEY FUNCTION - Add to cart using the same storage
-    window.addToCart = function(productId, quantity = 1, variation = null) {
-        const product = products.find(p => p.id === productId);
-        if (!product) {
-            console.error('Product not found:', productId);
-            return;
-        }
-        
-        console.log('Adding to cart:', product.name);
-        
-        const existing = cart.find(item => item.id === productId);
-        if (existing) {
-            existing.quantity += quantity;
-        } else {
-            cart.push({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                quantity: quantity
-            });
-        }
-        
-        saveCart();
-        
-        const toast = document.getElementById('toast');
-        if (toast) {
-            toast.innerText = `${product.name} added to cart! 🛒`;
-            toast.style.opacity = '1';
-            toast.style.visibility = 'visible';
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.visibility = 'hidden';
-            }, 2000);
-        }
-        
-        return cart;
-    };
-    
-    // Also expose as addToMyCart for consistency
-    window.addToMyCart = window.addToCart;
-    
-    // Show cart modal (same as main page)
-    window.showCart = function() {
-        const cartItemsDiv = document.getElementById('cartItems');
-        const cartTotalSpan = document.getElementById('cartTotal');
-        const cartModal = document.getElementById('cartModal');
-        
-        if (!cartItemsDiv) return;
-        
-        if (cart.length === 0) {
-            cartItemsDiv.innerHTML = '<p style="text-align:center; padding:20px;">Your cart is empty. 🛒</p>';
-            if (cartTotalSpan) cartTotalSpan.innerText = '0.00';
-        } else {
-            let html = '';
-            let total = 0;
-            
-            cart.forEach((item, idx) => {
-                total += item.price * item.quantity;
-                html += `
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #e0eef5;">
-                        <div style="flex:1;">
-                            <div style="font-weight: 500;">${escapeHtml(item.name)}</div>
-                            <div style="font-size: 13px; color: #1976a5;">RM ${item.price.toFixed(2)} each</div>
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <button class="cart-qty-btn" data-idx="${idx}" data-action="decr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">-</button>
-                            <span>${item.quantity}</span>
-                            <button class="cart-qty-btn" data-idx="${idx}" data-action="incr" style="background:#e0eef5; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer;">+</button>
-                            <button class="cart-qty-btn" data-idx="${idx}" data-action="remove" style="background:#ff6b6b; border:none; width:28px; height:28px; border-radius:50%; cursor:pointer; color:white;">🗑</button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            cartItemsDiv.innerHTML = html;
-            if (cartTotalSpan) cartTotalSpan.innerText = total.toFixed(2);
-            
-            document.querySelectorAll('.cart-qty-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const idx = parseInt(btn.dataset.idx);
-                    const action = btn.dataset.action;
-                    
-                    if (action === 'incr') {
-                        cart[idx].quantity++;
-                    } else if (action === 'decr') {
-                        if (cart[idx].quantity > 1) {
-                            cart[idx].quantity--;
-                        } else {
-                            cart.splice(idx, 1);
-                        }
-                    } else if (action === 'remove') {
-                        cart.splice(idx, 1);
-                    }
-                    saveCart();
-                    window.showCart();
-                });
-            });
-        }
-        
-        if (cartModal) cartModal.style.display = 'flex';
-    };
-    
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    
-    // Hook cart icon
-    const cartIcon = document.getElementById('cartIcon');
-    if (cartIcon) {
-        const newIcon = cartIcon.cloneNode(true);
-        cartIcon.parentNode.replaceChild(newIcon, cartIcon);
-        newIcon.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.showCart();
-        });
-    }
-    
-    // Hook view cart button (if exists on detail page)
-    const viewCartBtn = document.getElementById('viewCartBtn');
-    if (viewCartBtn) {
-        const newBtn = viewCartBtn.cloneNode(true);
-        viewCartBtn.parentNode.replaceChild(newBtn, viewCartBtn);
-        newBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            window.showCart();
-        });
-    }
-    
-    // Hook checkout button
-    const checkoutBtn = document.getElementById('checkoutBtn');
-    if (checkoutBtn) {
-        const newBtn = checkoutBtn.cloneNode(true);
-        checkoutBtn.parentNode.replaceChild(newBtn, checkoutBtn);
-        newBtn.addEventListener('click', () => {
-            if (cart.length === 0) {
-                alert('Cart is empty! Add items first.');
-                return;
-            }
-            document.getElementById('cartModal').style.display = 'none';
-            document.getElementById('checkoutModal').style.display = 'flex';
-        });
-    }
-    
-    // Hook checkout form
-    const checkoutForm = document.getElementById('checkoutForm');
-    if (checkoutForm) {
-        const newForm = checkoutForm.cloneNode(true);
-        checkoutForm.parentNode.replaceChild(newForm, checkoutForm);
-        newForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (cart.length === 0) {
-                alert('Cart is empty!');
-                return;
-            }
-            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            cart = [];
-            saveCart();
-            alert(`✅ Order placed successfully!\nTotal: RM ${total.toFixed(2)}\nThank you for shopping!`);
-            document.getElementById('checkoutModal').style.display = 'none';
-            newForm.reset();
-            window.showCart();
-        });
-    }
-    
-    // Close modal buttons
-    const closeBtn = document.querySelector('#cartModal .close');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', () => {
-            document.getElementById('cartModal').style.display = 'none';
-        });
-    }
-    
-    const closeCheckout = document.querySelector('#checkoutModal .close-checkout');
-    if (closeCheckout) {
-        closeCheckout.addEventListener('click', () => {
-            document.getElementById('checkoutModal').style.display = 'none';
-        });
-    }
-    
-    const continueBtn = document.getElementById('continueShoppingBtn');
-    if (continueBtn) {
-        continueBtn.addEventListener('click', () => {
-            document.getElementById('cartModal').style.display = 'none';
-        });
-    }
-    
-    loadCart();
-    console.log('✅ DETAIL PAGE CART SYSTEM READY!');
-})();
+// Default images by category
+const defaultImages = {
+    'Shirt': 'https://img.freepik.com/premium-photo/blue-cotton-tshirt-with-luxury-design-tshirt-mockup_677428-1057.jpg',
+    'Hat': 'https://tse1.mm.bing.net/th/id/OIP.ti9ujzBZ9gwzAkfr34i6mgAAAA',
+    'Accessories': 'https://images.pexels.com/photos/380774/pexels-photo-380774.jpeg',
+    'Electronics': 'https://images.pexels.com/photos/12789436/pexels-photo-12789436.jpeg',
+    'Badminton': 'https://cdn.store-assets.com/s/964873/i/49661033.jpg'
+};
 
-// ========== PRODUCT DETAIL LOADER ==========
-function getRecommendations(currentProduct) {
-    let sameCategory = products.filter(p => p.category === currentProduct.category && p.id !== currentProduct.id);
-    if (sameCategory.length < 4) {
-        const priceRange = products.filter(p => p.id !== currentProduct.id && p.category !== currentProduct.category && Math.abs(p.price - currentProduct.price) < 50);
-        sameCategory = [...sameCategory, ...priceRange];
-    }
-    return sameCategory.slice(0, 4);
-}
-
-function renderRecommendations(currentProduct) {
-    const recommendations = getRecommendations(currentProduct);
-    if (recommendations.length === 0) return '';
-    return `
-        <div class="recommendations-section">
-            <div class="recommendations-title">✨ You May Also Like</div>
-            <div class="recommendations-grid">
-                ${recommendations.map(rec => `
-                    <a href="product-detail.html?id=${rec.id}" class="rec-product-card">
-                        <img class="rec-product-img" src="${rec.image}" alt="${rec.name}">
-                        <div class="rec-product-info">
-                            <div class="rec-product-name">${rec.name}</div>
-                            <div class="rec-product-price">RM ${rec.price.toFixed(2)}</div>
-                            <div class="rec-product-rating">⭐ ${rec.rating}/5</div>
-                        </div>
-                    </a>
-                `).join('')}
-            </div>
-        </div>
-    `;
-}
-
-function loadProductDetail() {
+// Load product from Supabase
+async function loadProductFromSupabase() {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = parseInt(urlParams.get('id'));
-    const product = products.find(p => p.id === productId);
     
-    if (!product) {
-        document.getElementById('detailContent').innerHTML = '<p>Product not found.</p>';
+    if (isNaN(productId)) {
+        document.getElementById('detailContent').innerHTML = '<p>Invalid product ID.</p>';
         return;
     }
     
-    let variationsHtml = '';
-    if (product.colors && product.colors.length > 0) {
-        variationsHtml += `
-            <div class="variation-label">🎨 Color:</div>
-            <div class="variation-options" id="colorOptions">
-                ${product.colors.map((color, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="color" data-value="${color}">${color}</button>`).join('')}
+    try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/products?id=eq.${productId}&select=*`, {
+            headers: {
+                'apikey': SUPABASE_ANON_KEY,
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            }
+        });
+        
+        const products = await response.json();
+        const product = products[0];
+        
+        if (!product) {
+            document.getElementById('detailContent').innerHTML = `
+                <div style="text-align:center; padding:40px;">
+                    <h2>Product not found</h2>
+                    <p>Product with ID ${productId} does not exist in the database.</p>
+                    <a href="index.html" style="color: #1976a5;">← Back to Marketplace</a>
+                </div>
+            `;
+            return;
+        }
+        
+        // Display product
+        displayProductDetail(product);
+        
+    } catch (error) {
+        console.error('Error loading product:', error);
+        document.getElementById('detailContent').innerHTML = `
+            <div style="text-align:center; padding:40px;">
+                <h2>Error loading product</h2>
+                <p>${error.message}</p>
+                <a href="index.html" style="color: #1976a5;">← Back to Marketplace</a>
             </div>
         `;
     }
-    if (product.sizes && product.sizes.length > 0) {
-        variationsHtml += `
-            <div class="variation-label" style="margin-top:15px;">📏 Size:</div>
-            <div class="variation-options" id="sizeOptions">
-                ${product.sizes.map((size, i) => `<button class="variation-btn ${i === 0 ? 'active' : ''}" data-type="size" data-value="${size}">${size}</button>`).join('')}
-            </div>
-        `;
-    }
+}
+
+function displayProductDetail(product) {
+    // Get image URL
+    const imageUrl = product.image_url && product.image_url.startsWith('http') 
+        ? product.image_url 
+        : defaultImages[product.category] || 'https://picsum.photos/id/1/400/400';
     
+    // Sample reviews
     const sampleReviews = [
         { name: "Ahmad F.", rating: 5, date: "2 days ago", text: "Excellent quality! Fast delivery and well packaged." },
-        { name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase." },
-        { name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price." }
+        { name: "Siti N.", rating: 5, date: "5 days ago", text: "Very satisfied with my purchase. Product matches description perfectly." },
+        { name: "Kevin T.", rating: 4, date: "1 week ago", text: "Good product for the price. Shipping was quick." }
     ];
     
     const reviewsHtml = sampleReviews.map(review => `
@@ -791,30 +494,24 @@ function loadProductDetail() {
         </div>
     `).join('');
     
-    const recommendationsHtml = renderRecommendations(product);
-    
     const html = `
         <div class="product-detail-main">
             <div class="product-detail-gallery">
                 <div class="image-wrapper">
-                    <img src="${product.image}" alt="${product.name}" id="mainProductImage">
+                    <img src="${imageUrl}" alt="${product.name}" id="mainProductImage">
                 </div>
             </div>
             <div class="product-detail-info">
-                <div class="product-detail-title">${product.name}</div>
-                <div class="product-detail-brand">Brand: ${product.brand || 'SeaTask Original'}</div>
+                <div class="product-detail-title">${escapeHtml(product.name)}</div>
+                <div class="product-detail-brand">Brand: SeaTask Original</div>
                 <div class="product-detail-rating">
-                    <div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating))} ${product.rating}/5</div>
-                    <div class="rating-count">${product.reviewCount || 0} Ratings</div>
+                    <div class="rating-stars">${'⭐'.repeat(Math.floor(product.rating || 4.5))} ${product.rating || 4.5}/5</div>
+                    <div class="rating-count">${product.review_count || 0} Ratings</div>
                 </div>
                 <div class="product-detail-price">
-                    <span class="current-price">RM ${product.price.toFixed(2)}</span>
-                    <span class="original-price">RM ${(product.price * 1.5).toFixed(2)}</span>
-                    <span class="discount">-${Math.round((1 - product.price/(product.price*1.5)) * 100)}%</span>
-                </div>
-                
-                <div class="product-variations">
-                    ${variationsHtml}
+                    <span class="current-price">RM ${(product.price || 0).toFixed(2)}</span>
+                    <span class="original-price">RM ${((product.price || 0) * 1.5).toFixed(2)}</span>
+                    <span class="discount">-${Math.round((1 - (product.price || 0)/((product.price || 0)*1.5)) * 100)}%</span>
                 </div>
                 
                 <div class="quantity-selector">
@@ -823,7 +520,7 @@ function loadProductDetail() {
                     <button class="quantity-btn" id="incrQty">+</button>
                 </div>
                 
-                <button class="add-to-cart-detail" id="addToCartBtn">Add to Cart</button>
+                <button class="add-to-cart-detail" id="addToCartBtn" data-id="${product.id}" data-name="${escapeHtml(product.name)}" data-price="${product.price}">Add to Cart</button>
                 
                 <div class="seller-info">
                     <div>🏪 <span class="seller-name">SeaTask Official Store</span></div>
@@ -841,50 +538,104 @@ function loadProductDetail() {
                 
                 <div class="details-description">
                     <strong>📝 Description:</strong><br>
-                    ${product.description}
+                    ${product.description || 'No description available.'}
                     <br><br>
-                    <strong>🧵 Material:</strong> ${product.material || 'Premium Quality'}<br>
-                    <strong>📍 Origin:</strong> ${product.origin || 'Made in Malaysia'}<br>
-                    <strong>🧼 Care:</strong> ${product.care || 'Standard care instructions.'}
+                    <strong>🧵 Material:</strong> Premium Quality<br>
+                    <strong>📍 Origin:</strong> Made in Malaysia<br>
+                    <strong>🧼 Care:</strong> Standard care instructions.
                 </div>
             </div>
         </div>
         
-        ${recommendationsHtml}
-        
         <div class="reviews-section">
-            <h3>Customer Reviews (${product.reviewCount || 0})</h3>
+            <h3>Customer Reviews (${product.review_count || 0})</h3>
             ${reviewsHtml}
         </div>
     `;
     
     document.getElementById('detailContent').innerHTML = html;
     
+    // Quantity selector
     let qty = 1;
-    document.getElementById('incrQty')?.addEventListener('click', () => { qty++; document.getElementById('qtyValue').innerText = qty; });
-    document.getElementById('decrQty')?.addEventListener('click', () => { if (qty > 1) qty--; document.getElementById('qtyValue').innerText = qty; });
+    const qtySpan = document.getElementById('qtyValue');
+    document.getElementById('incrQty')?.addEventListener('click', () => { qty++; if (qtySpan) qtySpan.innerText = qty; });
+    document.getElementById('decrQty')?.addEventListener('click', () => { if (qty > 1) qty--; if (qtySpan) qtySpan.innerText = qty; });
     
-    // THIS IS THE FIX - Use window.addToCart (which now uses the same cart system)
-    document.getElementById('addToCartBtn')?.addEventListener('click', () => {
-        const selectedColor = document.querySelector('[data-type="color"].active')?.getAttribute('data-value') || null;
-        const selectedSize = document.querySelector('[data-type="size"].active')?.getAttribute('data-value') || null;
-        window.addToCart(product.id, qty, { color: selectedColor, size: selectedSize });
-    });
-    
-    document.querySelectorAll('.variation-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const parent = this.parentElement;
-            parent.querySelectorAll('.variation-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    // Add to cart
+    const addBtn = document.getElementById('addToCartBtn');
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            const id = parseInt(addBtn.dataset.id);
+            const name = addBtn.dataset.name;
+            const price = parseFloat(addBtn.dataset.price);
+            
+            // Get existing cart
+            let cart = JSON.parse(localStorage.getItem('my_simple_cart') || '[]');
+            const existing = cart.find(item => item.id === id);
+            
+            if (existing) {
+                existing.quantity += qty;
+            } else {
+                cart.push({ id: id, name: name, price: price, quantity: qty, addedAt: Date.now() });
+            }
+            
+            localStorage.setItem('my_simple_cart', JSON.stringify(cart));
+            
+            // Update cart count
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const cartCount = document.getElementById('cartCount');
+            if (cartCount) cartCount.innerText = totalItems;
+            
+            // Show toast
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.innerText = `${name} added to cart! 🛒`;
+                toast.style.opacity = '1';
+                toast.style.visibility = 'visible';
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.visibility = 'hidden';
+                }, 2000);
+            }
         });
-    });
-    
-    if (typeof addAngleDots === 'function') {
-        setTimeout(() => addAngleDots(), 100);
     }
 }
 
-loadProductDetail();
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Initialize
+loadProductFromSupabase();
+</script>
+
+<!-- Cart System -->
+<script>
+(function() {
+    const CART_KEY = 'my_simple_cart';
+    
+    function updateCartCount() {
+        const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        const cartCountSpan = document.getElementById('cartCount');
+        if (cartCountSpan) cartCountSpan.innerText = total;
+    }
+    
+    updateCartCount();
+    
+    // Cart icon click
+    const cartIcon = document.getElementById('cartIcon');
+    if (cartIcon) {
+        cartIcon.addEventListener('click', () => {
+            const cart = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            alert(`Cart: ${cart.length} items\nTotal: RM ${total.toFixed(2)}`);
+        });
+    }
+})();
 </script>
 
 </body>
