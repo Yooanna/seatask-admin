@@ -95,6 +95,15 @@
             border-radius: 8px;
             cursor: pointer;
         }
+        .refresh-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
         .products-table-container {
             background: white;
             border-radius: 16px;
@@ -185,7 +194,6 @@
             transition: 0.3s;
             pointer-events: none;
         }
-        .loading { opacity: 0.5; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -212,7 +220,10 @@
         <div class="main-content">
             <header class="admin-header">
                 <h1 id="pageTitle">Products Management</h1>
-                <button id="addNewBtn" class="add-btn">+ Add New Product</button>
+                <div>
+                    <button id="refreshBtn" class="refresh-btn">🔄 Refresh</button>
+                    <button id="addNewBtn" class="add-btn">+ Add New Product</button>
+                </div>
             </header>
             <div id="productsTab" class="tab-content">
                 <div class="products-table-container">
@@ -220,7 +231,7 @@
                         <thead>
                             <tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Actions</th>
                         </thead>
-                        <tbody id="productsList"><tr><td colspan="5" style="text-align:center;">Loading products from Supabase...<br>Make sure your database has products</td></tr>
+                        <tbody id="productsList"><tr><td colspan="5" style="text-align:center;">Loading products...<br>Please wait...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -302,11 +313,17 @@
             checkAuth();
         });
 
+        // Refresh button
+        document.getElementById('refreshBtn')?.addEventListener('click', () => {
+            showToast('🔄 Refreshing products...', 'success');
+            loadProducts();
+        });
+
         // ========== PRODUCT CRUD OPERATIONS ==========
         
         async function loadProducts() {
             const tbody = document.getElementById('productsList');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading products...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading products from Supabase...<br>⏳ Please wait...</td></tr>';
             
             try {
                 const response = await fetch(`${SUPABASE_URL}/rest/v1/products?select=*&order=id.asc`, {
@@ -321,7 +338,7 @@
                 }
                 
                 const products = await response.json();
-                console.log('Products loaded:', products);
+                console.log('Products loaded:', products.length);
                 
                 if (products && products.length > 0) {
                     tbody.innerHTML = products.map(p => `
@@ -336,12 +353,13 @@
                             </td>
                         </tr>
                     `).join('');
+                    showToast(`✅ Loaded ${products.length} products`, 'success');
                 } else {
                     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">📦 No products found. Click "Add New Product" to create one.</td></tr>';
                 }
             } catch (error) {
                 console.error('Error loading products:', error);
-                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ Error: ${error.message}<br>Make sure Supabase is accessible and CORS is configured.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">❌ Error: ${error.message}<br>Make sure Supabase is accessible.</td></tr>`;
                 showToast('Error loading products: ' + error.message, 'error');
             }
         }
@@ -360,7 +378,7 @@
                 
                 if (response.ok) {
                     showToast('✅ Product deleted successfully!', 'success');
-                    loadProducts();
+                    await loadProducts(); // Refresh immediately
                 } else {
                     throw new Error('Delete failed');
                 }
@@ -450,7 +468,7 @@
                         });
                         showToast('✅ Product updated successfully!', 'success');
                         closeEditModal();
-                        loadProducts();
+                        await loadProducts(); // Refresh immediately
                     } catch (error) {
                         showToast('❌ Error updating product', 'error');
                     }
@@ -511,6 +529,7 @@
             
             document.getElementById('addProductForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
+                
                 const newProduct = {
                     name: document.getElementById('addName').value,
                     category: document.getElementById('addCategory').value,
@@ -520,6 +539,8 @@
                     description: document.getElementById('addDescription').value,
                     review_count: 0
                 };
+                
+                console.log('Creating product:', newProduct);
                 
                 try {
                     const response = await fetch(`${SUPABASE_URL}/rest/v1/products`, {
@@ -532,16 +553,21 @@
                         body: JSON.stringify(newProduct)
                     });
                     
+                    const result = await response.json();
+                    console.log('Server response:', result);
+                    
                     if (response.ok) {
-                        showToast('✅ Product created successfully!', 'success');
+                        showToast('✅ Product created successfully! Refreshing list...', 'success');
                         closeAddModal();
-                        loadProducts();
+                        await loadProducts(); // Refresh immediately
+                        // Clear form
+                        document.getElementById('addProductForm').reset();
                     } else {
-                        const error = await response.json();
-                        showToast('❌ Error: ' + JSON.stringify(error), 'error');
+                        showToast('❌ Error: ' + JSON.stringify(result), 'error');
                     }
                 } catch (error) {
-                    showToast('❌ Error creating product', 'error');
+                    console.error('Error creating product:', error);
+                    showToast('❌ Error creating product: ' + error.message, 'error');
                 }
             });
         });
@@ -613,6 +639,9 @@
                 const addBtn = document.getElementById('addNewBtn');
                 if (addBtn) {
                     addBtn.style.display = tab === 'products' ? 'block' : 'none';
+                }
+                if (tab === 'products') {
+                    loadProducts(); // Refresh when switching to products tab
                 }
             });
         });
