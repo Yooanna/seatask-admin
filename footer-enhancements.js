@@ -1,5 +1,3 @@
-
-
 (function() {
     
 const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
@@ -50,10 +48,6 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
                             <a href="https://www.instagram.com/sea_task/" target="_blank" class="social-link" data-social="instagram" rel="noopener noreferrer">
                                 <span class="social-icon">📷</span>
                                 <span>Instagram</span>
-                            </a>
-                            <a href="https://www.tiktok.com/@seatask001" target="_blank" class="social-link" data-social="tiktok" rel="noopener noreferrer">
-                                <span class="social-icon">🎵</span>
-                                <span>TikTok</span>
                             </a>
                         </div>
                     </div>
@@ -427,5 +421,5 @@ const API_URL = 'https://seatask-api.onrender.com'; // Your API server address
         initFooterEnhancement();
     }
     
-    console.log('✅ Footer enhancement ready - Social media links: Facebook, Instagram, TikTok');
+    console.log('✅ Footer enhancement ready - Social media links: Facebook, Instagram');
 })();
